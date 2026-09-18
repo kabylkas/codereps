@@ -44,21 +44,96 @@ frontend/      # React SPA
 
 ## Getting Started
 
-### Backend
+### Prerequisites
+
+- **Python 3.12** and [`uv`](https://docs.astral.sh/uv/)
+- **Node 20+** and npm
+- **Docker** — required. Student submissions execute inside ephemeral containers;
+  without a running Docker daemon every submission fails with a runner error.
+
+### 1. Backend
 
 ```bash
 cd backend
 uv sync
+cp .env.example .env
+# SECRET_KEY is mandatory — the app refuses to boot with the placeholder value:
+python3 -c 'import secrets; print(secrets.token_urlsafe(48))'   # paste into .env
+```
+
+Set `OPENROUTER_API_KEY` in `.env`. It is needed for AI problem generation and
+for per-student personalization — and personalization runs when a **student
+opens a problem**, so without a key the student solve page fails with a 500.
+Course, topic, and problem authoring, plus submission and grading via the API,
+all work without a key; the student-facing loop does not.
+
+```bash
+uv run alembic upgrade head    # create / migrate the database
+uv run python seed.py          # demo admin, professor, student + starter tags
 uv run uvicorn app.main:app --reload
 ```
 
-### Frontend
+API on `http://localhost:8000`, interactive docs at `/docs`.
+
+### 2. Submission sandbox image
+
+Build once (and after any change to `Dockerfile.runner`):
+
+```bash
+cd backend
+docker build -f Dockerfile.runner -t codereps-runner .
+```
+
+### 3. Frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
+App on `http://localhost:5173`. It talks to `http://localhost:8000/api` by
+default; override with `VITE_API_URL`.
+
+### Demo accounts
+
+Created by `seed.py`:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@codereps.ai` | `admin123` |
+| Professor | `professor@codereps.ai` | `prof123` |
+| Student | `student@codereps.ai` | `student123` |
+
+### Troubleshooting
+
+**Login fails with no error detail.** Docker Desktop binds `*:8000` on IPv6, and
+macOS resolves `localhost` to `::1` before `127.0.0.1` — so `localhost:8000`
+reaches Docker's API server (which 404s without CORS headers) instead of
+uvicorn, which listens on IPv4 only. The frontend defaults to
+`http://127.0.0.1:8000/api` for this reason. If you override `VITE_API_URL`, use
+the IPv4 literal, not `localhost`. To confirm who holds the port:
+
+```bash
+lsof -nP -iTCP:8000 -sTCP:LISTEN
+```
+
+**Every submission fails with a runner error.** The sandbox image is missing or
+the Docker daemon is stopped. Rebuild with the command in step 2 and check
+`docker info`.
+
+**Backend exits on startup with a `SECRET_KEY` message.** `.env` is missing or
+still holds the placeholder. See step 1.
+
+### Walking the happy path
+
+1. Sign in as the professor → **Courses → Create Course** (pick `python`).
+2. Open the course, add a **Topic**, then either generate problems with AI
+   (needs `OPENROUTER_API_KEY`) or hand-author one in **Problem Studio** and
+   add it to the course. Give it at least one test case.
+3. Copy the course **join code**.
+4. Sign in as the student → **Courses → Join** with that code, then open
+   **My Problems** and solve one.
 
 ## MVP Scope
 
