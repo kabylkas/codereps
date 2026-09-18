@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_db, get_current_user, require_role
+from app.dependencies import get_db, get_current_user, require_role, assert_course_member
 from app.users.models import User
 from app.courses import service as course_service
 from app.topics import service
@@ -36,7 +36,8 @@ async def list_topics(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    await _get_course_or_404(course_id, db)
+    course = await _get_course_or_404(course_id, db)
+    await assert_course_member(db, current_user, course)
     return await service.get_topics_for_course(db, course_id)
 
 

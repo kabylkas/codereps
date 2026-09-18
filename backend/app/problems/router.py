@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_db, get_current_user, require_role
+from app.dependencies import get_db, get_current_user, require_role, assert_problem_visible_to
 from app.users.models import User
 from app.problems.schemas import (
     ProblemCreate, ProblemUpdate, ProblemResponse,
@@ -75,10 +75,24 @@ async def get_problem(
     problem = await service.get_problem_by_id(db, problem_id)
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")
-    # Hide solution and hidden test cases from students
+    await assert_problem_visible_to(db, current_user, problem)
+
     if current_user.role == "student":
-        problem.solution_code = None
-        problem.test_cases = [tc for tc in problem.test_cases if not tc.is_hidden]
+        return ProblemResponse(
+            id=problem.id,
+            title=problem.title,
+            description=problem.description,
+            difficulty=problem.difficulty,
+            starter_code=problem.starter_code,
+            solution_code=None,
+            language=problem.language,
+            created_by=problem.created_by,
+            is_public=problem.is_public,
+            topic_id=problem.topic_id,
+            tags=[{"id": t.id, "name": t.name} for t in problem.tags],
+            test_cases=[tc for tc in problem.test_cases if not tc.is_hidden],
+            created_at=problem.created_at,
+        )
     return problem
 
 
@@ -92,6 +106,7 @@ async def get_personalized_problem(
     problem = await service.get_problem_by_id(db, problem_id)
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")
+    await assert_problem_visible_to(db, current_user, problem)
 
     # Non-students get the original problem back (no personalization)
     if current_user.role != "student":
@@ -174,6 +189,10 @@ async def list_test_cases(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    problem = await service.get_problem_by_id(db, problem_id)
+    if not problem:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    await assert_problem_visible_to(db, current_user, problem)
     test_cases = await service.get_test_cases(db, problem_id)
     if current_user.role == "student":
         test_cases = [tc for tc in test_cases if not tc.is_hidden]

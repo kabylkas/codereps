@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_db, get_current_user
+from app.dependencies import get_db, get_current_user, assert_problem_visible_to
 from app.users.models import User
 from app.problems import service as problem_service
 from app.submissions import service
@@ -20,9 +20,15 @@ async def submit_code(
     problem = await problem_service.get_problem_by_id(db, problem_id)
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")
+    await assert_problem_visible_to(db, current_user, problem)
 
     if data.language not in ("python", "c"):
         raise HTTPException(status_code=400, detail="Unsupported language. Use 'python' or 'c'.")
+    if data.language != problem.language:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Problem requires {problem.language}, got {data.language}",
+        )
 
     submission = await service.submit_and_run(
         db, problem, current_user.id, data.code, data.language,
@@ -36,6 +42,10 @@ async def list_submissions(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    problem = await problem_service.get_problem_by_id(db, problem_id)
+    if not problem:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    await assert_problem_visible_to(db, current_user, problem)
     return await service.get_submissions_for_problem(db, problem_id, current_user.id)
 
 
@@ -48,6 +58,10 @@ async def get_submission(
     submission = await service.get_submission_by_id(db, submission_id)
     if not submission:
         raise HTTPException(status_code=404, detail="Submission not found")
-    if submission.user_id != current_user.id and current_user.role not in ("admin", "professor"):
-        raise HTTPException(status_code=403, detail="Not allowed")
-    return submission
+    if submission.user_id == current_user.id or current_user.role == "admin":
+        return submission
+    # Professors can see submissions only for problems they authored
+    problem = await problem_service.get_problem_by_id(db, submission.problem_id)
+    if current_user.role == "professor" and problem and problem.created_by == current_user.id:
+        return submission
+    raise HTTPException(status_code=403, detail="Not allowed")

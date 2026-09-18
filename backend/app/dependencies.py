@@ -7,7 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.courses.models import Course, CourseEnrollment
 from app.database import async_session_maker
+from app.problems.models import CourseProblem, Problem
 from app.users.models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -51,3 +53,33 @@ def require_role(*roles: str):
             )
         return current_user
     return dependency
+
+
+async def assert_course_member(db: AsyncSession, user: User, course: Course) -> None:
+    """Allow if admin, course owner, or an enrolled student."""
+    if user.role == "admin" or course.owner_id == user.id:
+        return
+    enrollment = await db.execute(
+        select(CourseEnrollment.id).where(
+            CourseEnrollment.user_id == user.id,
+            CourseEnrollment.course_id == course.id,
+        )
+    )
+    if enrollment.first() is None:
+        raise HTTPException(status_code=403, detail="Not a member of this course")
+
+
+async def assert_problem_visible_to(db: AsyncSession, user: User, problem: Problem) -> None:
+    """Allow if admin, problem author, or enrolled in any course containing the problem."""
+    if user.role == "admin" or problem.created_by == user.id:
+        return
+    result = await db.execute(
+        select(CourseEnrollment.course_id)
+        .join(CourseProblem, CourseProblem.course_id == CourseEnrollment.course_id)
+        .where(
+            CourseEnrollment.user_id == user.id,
+            CourseProblem.problem_id == problem.id,
+        )
+    )
+    if result.first() is None:
+        raise HTTPException(status_code=403, detail="Not authorized for this problem")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_db, get_current_user, require_role
+from app.dependencies import get_db, get_current_user, require_role, assert_course_member
 from app.users.models import User
 from app.auth.schemas import UserResponse
 from app.courses.schemas import CourseCreate, CourseUpdate, CourseResponse, JoinCourseRequest, AddProblemRequest
@@ -39,6 +39,7 @@ async def get_course(
     course = await service.get_course_by_id(db, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+    await assert_course_member(db, current_user, course)
     return course
 
 
@@ -133,6 +134,10 @@ async def get_my_problems(
     """Get the student's personalized problem pool for a course."""
     if current_user.role != "student":
         raise HTTPException(status_code=403, detail="Only students have personalized problems")
+    course = await service.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    await assert_course_member(db, current_user, course)
     return await personalization_service.get_student_problems_for_course(
         db, current_user.id, course_id, topic_id=topic_id,
     )
@@ -144,6 +149,10 @@ async def get_course_problems(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    course = await service.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    await assert_course_member(db, current_user, course)
     return await service.get_course_problems(db, course_id)
 
 
