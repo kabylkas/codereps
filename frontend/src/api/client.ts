@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+// 127.0.0.1, not localhost: on macOS "localhost" resolves to ::1 first, and
+// Docker Desktop binds *:8000 on IPv6 — so "localhost:8000" reaches Docker's
+// API server (404) instead of uvicorn, which listens on IPv4 only.
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 const client = axios.create({
   baseURL: API_URL,

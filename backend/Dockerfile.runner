@@ -4,10 +4,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Drop capability to install or modify packages — image is read-only at runtime,
-# but defense-in-depth: scrub package manager state.
-RUN apt-get purge -y --auto-remove apt-listchanges \
-    && rm -rf /etc/apt/sources.list.d/*
+# Defense-in-depth: the root fs is mounted read-only at run time, but scrub the
+# package manager anyway so a container that somehow gains write access still
+# cannot fetch anything. (--network none already blocks egress.)
+RUN rm -rf /etc/apt/sources.list /etc/apt/sources.list.d/* /var/lib/apt/lists/* \
+    && rm -f /usr/bin/apt /usr/bin/apt-get /usr/bin/apt-cache /usr/bin/dpkg-deb
 
 WORKDIR /work
 
