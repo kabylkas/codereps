@@ -1,4 +1,5 @@
 import json
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, field_validator
 
@@ -7,7 +8,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     full_name: str
-    role: str = "student"
+    role: Literal["student", "professor"] = "student"
 
 
 class TokenResponse(BaseModel):
