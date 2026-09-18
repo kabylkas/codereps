@@ -55,6 +55,15 @@ async def _execute_single_test(code: str, language: str, tc: TestCase) -> TestRe
             error_message=f"Unsupported language: {language}",
         )
     with tempfile.TemporaryDirectory() as tmpdir:
+        # TemporaryDirectory is created 0700, but the container runs as
+        # --user 65534 (nobody), which then cannot even traverse the mount:
+        # every test fails with "Permission denied" on Linux, where Docker
+        # maps uids straight through. (Docker Desktop on macOS masks this —
+        # its file sharing ignores host ownership.) C compilation writes the
+        # binary into /work and file_io tests write their output file there,
+        # so those runs additionally need the mount writable by nobody.
+        needs_write = language == "c" or tc.test_type == "file_io"
+        os.chmod(tmpdir, 0o777 if needs_write else 0o755)
         try:
             if language == "python":
                 return await _run_python(code, tc, tmpdir)
