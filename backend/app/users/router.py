@@ -44,6 +44,8 @@ async def update_active(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    if user_id == current_user.id and not data.is_active:
+        raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
     user = await service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
