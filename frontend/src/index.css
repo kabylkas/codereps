@@ -1,7 +1,161 @@
 @import "tailwindcss";
 
+@theme {
+  /* ── Brand Colors ── */
+  --color-base: #0c0d12;
+  --color-surface: #161822;
+  --color-surface-2: #1e2130;
+  --color-surface-3: #282c3e;
+  --color-border: #2e3348;
+  --color-border-subtle: #1e2130;
+
+  --color-lime: #c8ff2e;
+  --color-lime-hover: #d4ff5e;
+  --color-lime-dim: #c8ff2e18;
+  --color-lime-glow: #c8ff2e30;
+
+  --color-text-primary: #f0f1f5;
+  --color-text-secondary: #8b8fa3;
+  --color-text-tertiary: #5c6078;
+
+  --color-success: #34d399;
+  --color-success-dim: #34d39920;
+  --color-warning: #fbbf24;
+  --color-warning-dim: #fbbf2420;
+  --color-error: #f87171;
+  --color-error-dim: #f8717120;
+  --color-info: #60a5fa;
+  --color-info-dim: #60a5fa20;
+
+  /* ── Typography ── */
+  --font-display: "Bricolage Grotesque", serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* ── Base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
+  background-color: var(--color-base);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border);
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--color-lime-glow);
+  color: var(--color-lime);
+}
+
+/* ── Focus rings ── */
+:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 2px;
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-lime-glow); }
+  50% { box-shadow: 0 0 20px 4px var(--color-lime-glow); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out both;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* ── Skeleton loading ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-surface-2) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ── Glow accent on hover ── */
+.glow-hover {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 24px -4px var(--color-lime-glow);
+  border-color: var(--color-lime) !important;
 }

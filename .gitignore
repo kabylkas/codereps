@@ -17,3 +17,6 @@ dist/
 .idea/
 *.sw?
 .DS_Store
+
+# Claude Code
+.claude/

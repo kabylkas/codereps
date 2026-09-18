@@ -4,6 +4,12 @@ import { useAuth } from "../../context/AuthContext";
 import { getProblem, deleteProblem } from "../../api/problems";
 import type { Problem } from "../../types/problem";
 
+const difficultyColors: Record<string, string> = {
+  easy: "bg-success-dim text-success",
+  medium: "bg-warning-dim text-warning",
+  hard: "bg-error-dim text-error",
+};
+
 export default function ProblemViewPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -19,8 +25,16 @@ export default function ProblemViewPage() {
     }
   }, [id]);
 
-  if (loading) return <p>Loading...</p>;
-  if (!problem) return <p>Problem not found.</p>;
+  if (loading) {
+    return (
+      <div className="max-w-3xl animate-fade-in">
+        <div className="skeleton h-8 w-64 mb-3" />
+        <div className="skeleton h-4 w-48 mb-8" />
+        <div className="skeleton h-48 w-full rounded-xl" />
+      </div>
+    );
+  }
+  if (!problem) return <p className="text-text-tertiary">Problem not found.</p>;
 
   const canEdit = user && (user.id === problem.created_by || user.role === "admin");
 
@@ -31,25 +45,18 @@ export default function ProblemViewPage() {
   };
 
   return (
-    <div className="max-w-3xl">
-      <div className="flex items-start justify-between mb-4">
+    <div className="max-w-3xl animate-fade-in">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">{problem.title}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span
-              className={`px-2 py-0.5 rounded text-xs ${
-                problem.difficulty === "easy"
-                  ? "bg-green-100 text-green-700"
-                  : problem.difficulty === "medium"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
+          <h1 className="font-display font-bold text-2xl text-text-primary mb-2">{problem.title}</h1>
+          <div className="flex items-center gap-2">
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${difficultyColors[problem.difficulty] || ""}`}>
               {problem.difficulty}
             </span>
-            <span className="text-sm text-gray-500">{problem.language}</span>
+            <span className="text-xs font-mono text-text-tertiary">{problem.language}</span>
             {problem.tags.map((t) => (
-              <span key={t.id} className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">
+              <span key={t.id} className="bg-surface-2 text-text-tertiary text-[10px] font-medium px-2 py-0.5 rounded-full">
                 {t.name}
               </span>
             ))}
@@ -58,7 +65,7 @@ export default function ProblemViewPage() {
         <div className="flex gap-2">
           <Link
             to={`/problems/${problem.id}/solve`}
-            className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700"
+            className="bg-lime text-[#0c0d12] px-4 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover transition-all duration-200 hover:shadow-[0_0_16px_var(--color-lime-glow)]"
           >
             Solve
           </Link>
@@ -66,11 +73,14 @@ export default function ProblemViewPage() {
             <>
               <Link
                 to={`/problems/${problem.id}/edit`}
-                className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-200"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-text-secondary border border-border hover:border-surface-3 hover:text-text-primary transition-colors"
               >
                 Edit
               </Link>
-              <button onClick={handleDelete} className="bg-red-100 text-red-700 px-3 py-1.5 rounded text-sm hover:bg-red-200">
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-error/70 border border-error/20 hover:border-error/40 hover:text-error transition-colors"
+              >
                 Delete
               </button>
             </>
@@ -78,50 +88,59 @@ export default function ProblemViewPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-4">
-        <h2 className="text-sm font-semibold text-gray-500 mb-2">Description</h2>
-        <div className="prose prose-sm max-w-none whitespace-pre-wrap">{problem.description}</div>
+      {/* Description */}
+      <div className="rounded-xl border border-border bg-surface p-6 mb-4">
+        <h2 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3">Description</h2>
+        <div className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm">{problem.description}</div>
       </div>
 
+      {/* Starter code */}
       {problem.starter_code && (
-        <div className="bg-white rounded-lg shadow p-6 mb-4">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Starter Code</h2>
-          <pre className="bg-gray-900 text-gray-100 rounded p-4 text-sm overflow-x-auto">
-            <code>{problem.starter_code}</code>
+        <div className="rounded-xl border border-border bg-surface p-6 mb-4">
+          <h2 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3">Starter Code</h2>
+          <pre className="bg-[#0c0d12] rounded-lg p-4 text-sm overflow-x-auto border border-border-subtle">
+            <code className="text-lime/80 font-mono">{problem.starter_code}</code>
           </pre>
         </div>
       )}
 
+      {/* Solution (professors only) */}
       {canEdit && problem.solution_code && (
-        <div className="bg-white rounded-lg shadow p-6 mb-4">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Solution (hidden from students)</h2>
-          <pre className="bg-gray-900 text-gray-100 rounded p-4 text-sm overflow-x-auto">
-            <code>{problem.solution_code}</code>
+        <div className="rounded-xl border border-border bg-surface p-6 mb-4">
+          <h2 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3 flex items-center gap-2">
+            Solution
+            <span className="text-[10px] bg-warning-dim text-warning px-2 py-0.5 rounded-full normal-case tracking-normal">Hidden from students</span>
+          </h2>
+          <pre className="bg-[#0c0d12] rounded-lg p-4 text-sm overflow-x-auto border border-border-subtle">
+            <code className="text-lime/80 font-mono">{problem.solution_code}</code>
           </pre>
         </div>
       )}
 
+      {/* Test cases */}
       {problem.test_cases && problem.test_cases.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-sm font-semibold text-gray-500 mb-3">
+        <div className="rounded-xl border border-border bg-surface p-6">
+          <h2 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-4">
             Test Cases ({problem.test_cases.length})
           </h2>
           <div className="space-y-3">
             {problem.test_cases.map((tc, idx) => (
-              <div key={tc.id} className="border border-gray-200 rounded p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-medium text-gray-500">Test {idx + 1}</span>
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">{tc.test_type}</span>
-                  {tc.is_hidden && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Hidden</span>}
+              <div key={tc.id} className="rounded-lg border border-border-subtle bg-surface-2/50 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-mono font-bold text-text-secondary">Test {idx + 1}</span>
+                  <span className="text-[10px] bg-surface-3 text-text-tertiary px-2 py-0.5 rounded-full">{tc.test_type}</span>
+                  {tc.is_hidden && (
+                    <span className="text-[10px] bg-warning-dim text-warning px-2 py-0.5 rounded-full">Hidden</span>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1">Input</p>
-                    <pre className="bg-gray-50 rounded p-2 text-xs overflow-x-auto">{tc.input_data}</pre>
+                    <p className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider mb-1.5">Input</p>
+                    <pre className="bg-[#0c0d12] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.input_data}</pre>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1">Expected Output</p>
-                    <pre className="bg-gray-50 rounded p-2 text-xs overflow-x-auto">{tc.expected_output}</pre>
+                    <p className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider mb-1.5">Expected Output</p>
+                    <pre className="bg-[#0c0d12] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.expected_output}</pre>
                   </div>
                 </div>
               </div>

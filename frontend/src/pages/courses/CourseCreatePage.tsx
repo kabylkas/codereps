@@ -25,35 +25,46 @@ export default function CourseCreatePage() {
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <div className="max-w-lg">
-      <h1 className="text-2xl font-bold mb-6">Create Course</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+    <div className="max-w-lg animate-fade-in">
+      <h1 className="font-display font-bold text-2xl text-text-primary mb-1">Create Course</h1>
+      <p className="text-text-tertiary text-sm mb-8">Set up a new course with a problem pool for your students.</p>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="bg-error-dim border border-error/20 rounded-lg px-4 py-3 animate-fade-in">
+            <p className="text-error text-sm">{error}</p>
+          </div>
+        )}
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Course Title</label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors"
+            placeholder="e.g. CS 101 — Intro to Programming"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Description</label>
           <textarea
             value={form.description}
             onChange={(e) => update("description", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors resize-none"
             rows={3}
+            placeholder="Brief description of the course..."
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Programming Language</label>
           <select
             value={form.language}
             onChange={(e) => update("language", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors appearance-none cursor-pointer"
           >
             <option value="python">Python</option>
             <option value="java">Java</option>
@@ -62,18 +73,19 @@ export default function CourseCreatePage() {
             <option value="cpp">C++</option>
           </select>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex gap-3 pt-2">
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+            className="bg-lime text-[#0c0d12] px-6 py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
           >
             {loading ? "Creating..." : "Create Course"}
           </button>
           <button
             type="button"
             onClick={() => navigate("/courses")}
-            className="border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-50"
+            className="px-6 py-3 rounded-lg text-sm font-medium text-text-secondary border border-border hover:border-surface-3 hover:text-text-primary transition-colors"
           >
             Cancel
           </button>

@@ -6,6 +6,12 @@ import { submitCode, getSubmissions } from "../../api/submissions";
 import type { Problem } from "../../types/problem";
 import type { Submission, SubmissionSummary } from "../../types/submission";
 
+const difficultyColors: Record<string, string> = {
+  easy: "bg-success-dim text-success",
+  medium: "bg-warning-dim text-warning",
+  hard: "bg-error-dim text-error",
+};
+
 export default function ProblemSolvePage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -44,51 +50,73 @@ export default function ProblemSolvePage() {
     }
   };
 
-  if (loading || !problem) return <p>Loading...</p>;
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const target = e.target as HTMLTextAreaElement;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const newCode = code.substring(0, start) + "    " + code.substring(end);
+      setCode(newCode);
+      setTimeout(() => {
+        target.selectionStart = target.selectionEnd = start + 4;
+      }, 0);
+    }
+  };
+
+  if (loading || !problem) {
+    return (
+      <div className="flex gap-6 h-[calc(100vh-8rem)]">
+        <div className="w-1/2 space-y-4">
+          <div className="skeleton h-7 w-48" />
+          <div className="skeleton h-48 rounded-xl" />
+        </div>
+        <div className="w-1/2">
+          <div className="skeleton h-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   const canSeeHidden = user && (user.role === "admin" || user.role === "professor");
   const visibleTestCases = problem.test_cases?.filter((tc) => canSeeHidden || !tc.is_hidden) || [];
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-8rem)]">
+    <div className="flex gap-5 h-[calc(100vh-8rem)] animate-fade-in">
       {/* Left: Problem description */}
-      <div className="w-1/2 overflow-y-auto pr-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Link to={`/problems/${problem.id}`} className="text-blue-600 hover:underline text-sm">
-            &larr; Back
+      <div className="w-[45%] overflow-y-auto pr-2 space-y-4">
+        <div className="flex items-center gap-3">
+          <Link to={`/problems/${problem.id}`} className="text-text-tertiary hover:text-text-secondary transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
           </Link>
-          <h1 className="text-xl font-bold">{problem.title}</h1>
-          <span
-            className={`px-2 py-0.5 rounded text-xs ${
-              problem.difficulty === "easy"
-                ? "bg-green-100 text-green-700"
-                : problem.difficulty === "medium"
-                ? "bg-yellow-100 text-yellow-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
+          <h1 className="font-display font-bold text-lg text-text-primary">{problem.title}</h1>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${difficultyColors[problem.difficulty] || ""}`}>
             {problem.difficulty}
           </span>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
-          <div className="prose prose-sm max-w-none whitespace-pre-wrap">{problem.description}</div>
+        {/* Description */}
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">{problem.description}</div>
         </div>
 
+        {/* Example test cases */}
         {visibleTestCases.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-4 mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">Example Test Cases</h3>
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3">Examples</h3>
             {visibleTestCases.slice(0, 3).map((tc, idx) => (
-              <div key={tc.id} className="mb-3 border border-gray-100 rounded p-2">
-                <p className="text-xs font-medium text-gray-500 mb-1">Test {idx + 1}</p>
+              <div key={tc.id} className="mb-3 last:mb-0 rounded-lg border border-border-subtle bg-surface-2/50 p-3">
+                <p className="text-[10px] font-mono font-bold text-text-tertiary mb-2">Test {idx + 1}</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-xs text-gray-400">Input</p>
-                    <pre className="bg-gray-50 rounded p-2 text-xs">{tc.input_data}</pre>
+                    <p className="text-[10px] text-text-tertiary mb-1">Input</p>
+                    <pre className="bg-[#0c0d12] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.input_data}</pre>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Expected Output</p>
-                    <pre className="bg-gray-50 rounded p-2 text-xs">{tc.expected_output}</pre>
+                    <p className="text-[10px] text-text-tertiary mb-1">Expected</p>
+                    <pre className="bg-[#0c0d12] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.expected_output}</pre>
                   </div>
                 </div>
               </div>
@@ -98,22 +126,22 @@ export default function ProblemSolvePage() {
 
         {/* Submission history */}
         {history.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">Submission History</h3>
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3">
+              Submission History
+            </h3>
             <div className="space-y-1">
               {history.map((s) => (
-                <div key={s.id} className="flex items-center justify-between text-xs py-1 border-b border-gray-50">
-                  <span
-                    className={`font-medium ${
-                      s.status === "passed" ? "text-green-600" : s.status === "failed" ? "text-red-600" : "text-gray-500"
-                    }`}
-                  >
+                <div key={s.id} className="flex items-center justify-between text-xs py-2 border-b border-border-subtle last:border-0">
+                  <span className={`font-bold ${
+                    s.status === "passed" ? "text-success" : s.status === "failed" ? "text-error" : "text-text-tertiary"
+                  }`}>
                     {s.status === "passed" ? "Passed" : s.status === "failed" ? "Failed" : s.status}
                   </span>
-                  <span className="text-gray-400">
-                    {s.passed_tests}/{s.total_tests} tests
+                  <span className="font-mono text-text-tertiary">
+                    {s.passed_tests}/{s.total_tests}
                   </span>
-                  <span className="text-gray-400">{new Date(s.created_at).toLocaleString()}</span>
+                  <span className="text-text-tertiary">{new Date(s.created_at).toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -122,78 +150,106 @@ export default function ProblemSolvePage() {
       </div>
 
       {/* Right: Code editor + results */}
-      <div className="w-1/2 flex flex-col">
-        <div className="flex items-center justify-between mb-2">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
-          >
-            <option value="python">Python</option>
-            <option value="c">C</option>
-          </select>
+      <div className="w-[55%] flex flex-col min-h-0">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-surface border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-text-secondary focus:outline-none focus:border-lime transition-colors cursor-pointer"
+            >
+              <option value="python">Python</option>
+              <option value="c">C</option>
+            </select>
+            <span className="text-[10px] text-text-tertiary font-mono">
+              {code.split("\n").length} lines
+            </span>
+          </div>
           <button
             onClick={handleSubmit}
             disabled={submitting || !code.trim()}
-            className="bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            className="bg-lime text-[#0c0d12] px-5 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)] flex items-center gap-2"
           >
-            {submitting ? "Running..." : "Submit"}
+            {submitting ? (
+              <>
+                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                Running...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Submit
+              </>
+            )}
           </button>
         </div>
 
-        <textarea
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="flex-1 font-mono text-sm bg-gray-900 text-gray-100 rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[300px]"
-          placeholder="Write your solution here..."
-          spellCheck={false}
-        />
+        {/* Code editor */}
+        <div className="flex-1 relative rounded-xl overflow-hidden border border-border min-h-[300px]">
+          {/* Line numbers background effect */}
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-surface-2/30 pointer-events-none" />
+          <textarea
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full h-full font-mono text-sm bg-[#0c0d12] text-lime/90 p-4 pl-14 resize-none focus:outline-none"
+            placeholder="Write your solution here..."
+            spellCheck={false}
+          />
+        </div>
 
         {/* Results */}
         {result && (
-          <div className="mt-4 overflow-y-auto max-h-[300px]">
-            <div
-              className={`rounded-lg p-3 mb-3 ${
-                result.status === "passed" ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
-              }`}
-            >
-              <p
-                className={`font-semibold text-sm ${
-                  result.status === "passed" ? "text-green-700" : "text-red-700"
-                }`}
-              >
+          <div className="mt-4 overflow-y-auto max-h-[280px] animate-fade-in">
+            {/* Summary banner */}
+            <div className={`rounded-xl p-4 mb-3 border ${
+              result.status === "passed"
+                ? "bg-success-dim border-success/20"
+                : "bg-error-dim border-error/20"
+            }`}>
+              <p className={`font-display font-bold text-sm ${
+                result.status === "passed" ? "text-success" : "text-error"
+              }`}>
                 {result.status === "passed"
                   ? `All tests passed! (${result.passed_tests}/${result.total_tests})`
                   : `${result.passed_tests}/${result.total_tests} tests passed`}
               </p>
             </div>
 
+            {/* Individual results */}
             <div className="space-y-2">
               {result.results.map((r, idx) => (
                 <div
                   key={r.id}
-                  className={`rounded border p-3 text-sm ${
-                    r.passed ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"
+                  className={`rounded-lg border p-3 text-sm ${
+                    r.passed
+                      ? "border-success/10 bg-success-dim/30"
+                      : "border-error/10 bg-error-dim/30"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`font-medium ${r.passed ? "text-green-700" : "text-red-700"}`}>
-                      Test {idx + 1}: {r.passed ? "Passed" : "Failed"}
+                    <span className={`text-xs font-mono font-bold ${r.passed ? "text-success" : "text-error"}`}>
+                      Test {idx + 1}: {r.passed ? "PASS" : "FAIL"}
                     </span>
                     {r.execution_time_ms != null && (
-                      <span className="text-xs text-gray-400">{r.execution_time_ms}ms</span>
+                      <span className="text-[10px] font-mono text-text-tertiary">{r.execution_time_ms}ms</span>
                     )}
                   </div>
                   {!r.passed && r.actual_output && (
-                    <div className="mt-1">
-                      <p className="text-xs text-gray-500">Your output:</p>
-                      <pre className="bg-white rounded p-2 text-xs mt-1 overflow-x-auto">{r.actual_output}</pre>
+                    <div className="mt-2">
+                      <p className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">Your output</p>
+                      <pre className="bg-[#0c0d12] rounded p-2 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{r.actual_output}</pre>
                     </div>
                   )}
                   {r.error_message && (
-                    <div className="mt-1">
-                      <p className="text-xs text-gray-500">Error:</p>
-                      <pre className="bg-white rounded p-2 text-xs mt-1 overflow-x-auto text-red-600">
+                    <div className="mt-2">
+                      <p className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">Error</p>
+                      <pre className="bg-[#0c0d12] rounded p-2 text-xs text-error font-mono overflow-x-auto border border-border-subtle">
                         {r.error_message}
                       </pre>
                     </div>

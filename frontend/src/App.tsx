@@ -12,12 +12,14 @@ import ProblemListPage from "./pages/problems/ProblemListPage";
 import ProblemEditorPage from "./pages/problems/ProblemEditorPage";
 import ProblemViewPage from "./pages/problems/ProblemViewPage";
 import ProblemSolvePage from "./pages/problems/ProblemSolvePage";
+import LandingPage from "./pages/LandingPage";
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 

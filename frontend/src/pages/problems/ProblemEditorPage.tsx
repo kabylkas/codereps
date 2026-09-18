@@ -66,40 +66,52 @@ export default function ProblemEditorPage() {
   };
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">{isEdit ? "Edit Problem" : "Create Problem"}</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+    <div className="max-w-3xl animate-fade-in">
+      <h1 className="font-display font-bold text-2xl text-text-primary mb-1">
+        {isEdit ? "Edit Problem" : "Create Problem"}
+      </h1>
+      <p className="text-text-tertiary text-sm mb-8">
+        {isEdit ? "Update the problem details below." : "Design a new practice problem for your students."}
+      </p>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="bg-error-dim border border-error/20 rounded-lg px-4 py-3 animate-fade-in">
+            <p className="text-error text-sm">{error}</p>
+          </div>
+        )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Title</label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors"
+            placeholder="Problem title..."
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description (Markdown)</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Description</label>
           <textarea
             value={form.description}
             onChange={(e) => update("description", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono"
+            className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary font-mono placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors resize-none"
             rows={8}
+            placeholder="Problem description with examples and constraints..."
             required
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Difficulty</label>
             <select
               value={form.difficulty}
               onChange={(e) => update("difficulty", e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors cursor-pointer"
             >
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
@@ -107,11 +119,11 @@ export default function ProblemEditorPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Language</label>
             <select
               value={form.language}
               onChange={(e) => update("language", e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors cursor-pointer"
             >
               <option value="python">Python</option>
               <option value="java">Java</option>
@@ -123,60 +135,60 @@ export default function ProblemEditorPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Starter Code</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Starter Code</label>
           <textarea
             value={form.starter_code}
             onChange={(e) => update("starter_code", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono bg-gray-50"
+            className="w-full bg-[#0c0d12] border border-border rounded-lg px-4 py-3 text-sm text-lime/80 font-mono placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors resize-none"
             rows={6}
             placeholder="Code that students start with..."
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Solution Code</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Solution Code</label>
           <textarea
             value={form.solution_code}
             onChange={(e) => update("solution_code", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono bg-gray-50"
+            className="w-full bg-[#0c0d12] border border-border rounded-lg px-4 py-3 text-sm text-lime/80 font-mono placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors resize-none"
             rows={6}
             placeholder="Reference solution..."
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+          <label className="block text-sm font-medium text-text-secondary mb-3">Tags</label>
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
               <button
                 type="button"
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
-                className={`px-3 py-1 rounded text-xs ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                   form.tag_ids.includes(tag.id)
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-lime text-[#0c0d12]"
+                    : "bg-surface-2 text-text-tertiary border border-border hover:border-surface-3 hover:text-text-secondary"
                 }`}
               >
                 {tag.name}
               </button>
             ))}
-            {tags.length === 0 && <span className="text-sm text-gray-400">No tags yet</span>}
+            {tags.length === 0 && <span className="text-sm text-text-tertiary">No tags available</span>}
           </div>
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-3 pt-3">
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+            className="bg-lime text-[#0c0d12] px-6 py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
           >
             {loading ? "Saving..." : isEdit ? "Update Problem" : "Create Problem"}
           </button>
           <button
             type="button"
             onClick={() => navigate("/problems")}
-            className="border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-50"
+            className="px-6 py-3 rounded-lg text-sm font-medium text-text-secondary border border-border hover:border-surface-3 hover:text-text-primary transition-colors"
           >
             Cancel
           </button>
