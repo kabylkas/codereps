@@ -237,37 +237,45 @@ async def get_or_create_personalized(
     problem: Problem,
     user: User,
 ) -> PersonalizedProblem:
-    """Return cached personalized problem, or create slot and generate on the fly."""
-    result = await db.execute(
-        select(PersonalizedProblem).where(
-            PersonalizedProblem.problem_id == problem.id,
-            PersonalizedProblem.user_id == user.id,
+    """Return cached personalized problem, or create slot and generate on the fly.
+
+    Concurrency: relies on the (problem_id, user_id) unique constraint to break ties.
+    Two concurrent callers will both attempt to insert; the loser catches IntegrityError,
+    re-fetches, and waits for the winner's slot to reach a terminal state.
+    """
+    from sqlalchemy.exc import IntegrityError
+
+    async def _fetch_slot() -> PersonalizedProblem | None:
+        result = await db.execute(
+            select(PersonalizedProblem).where(
+                PersonalizedProblem.problem_id == problem.id,
+                PersonalizedProblem.user_id == user.id,
+            )
         )
-    )
-    existing = result.scalar_one_or_none()
+        return result.scalar_one_or_none()
 
-    if existing and existing.status == "ready":
-        return existing
-
-    # If slot exists but is still generating, wait briefly then check again
-    if existing and existing.status == "generating":
-        for _ in range(15):  # wait up to 15 seconds
+    async def _wait_until_terminal(slot: PersonalizedProblem) -> PersonalizedProblem:
+        """Poll until slot reaches ready/failed. Does not mutate the slot."""
+        for _ in range(30):  # up to 30s of polling
+            await db.refresh(slot)
+            if slot.status in ("ready", "failed"):
+                return slot
             await asyncio.sleep(1)
-            await db.refresh(existing)
-            if existing.status == "ready":
-                return existing
-        # If still not ready, generate synchronously
-        existing.status = "pending"
-        await db.commit()
+        return slot
 
-    # If slot exists but pending/failed, generate now
-    if existing and existing.status in ("pending", "failed"):
+    existing = await _fetch_slot()
+    if existing:
+        if existing.status == "ready":
+            return existing
+        if existing.status == "generating":
+            return await _wait_until_terminal(existing)
+        # pending or failed — generate inline
         interests = _parse_interests(user)
         await _generate_single_slot(db, existing.id, user.full_name or "Student", interests)
         await db.refresh(existing)
         return existing
 
-    # No slot exists — create and generate synchronously
+    # No slot exists — try to insert. On race, the unique constraint wins.
     seed = random.randint(1, 100000)
     slot = PersonalizedProblem(
         problem_id=problem.id,
@@ -276,9 +284,19 @@ async def get_or_create_personalized(
         status="pending",
     )
     db.add(slot)
-    await db.commit()
-    await db.refresh(slot)
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        winner = await _fetch_slot()
+        if winner is None:
+            # Shouldn't happen — constraint fired but row is gone — surface clearly
+            raise
+        if winner.status == "ready":
+            return winner
+        return await _wait_until_terminal(winner)
 
+    await db.refresh(slot)
     interests = _parse_interests(user)
     await _generate_single_slot(db, slot.id, user.full_name or "Student", interests)
     await db.refresh(slot)
