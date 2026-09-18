@@ -31,8 +31,13 @@ async def get_courses_for_user(db: AsyncSession, user: User) -> list[Course]:
     return list(result.scalars().all())
 
 
-async def get_course_by_id(db: AsyncSession, course_id: str) -> Course | None:
-    result = await db.execute(select(Course).where(Course.id == course_id))
+async def get_course_by_id(
+    db: AsyncSession, course_id: str, include_inactive: bool = False
+) -> Course | None:
+    query = select(Course).where(Course.id == course_id)
+    if not include_inactive:
+        query = query.where(Course.is_active == True)
+    result = await db.execute(query)
     return result.scalar_one_or_none()
 
 

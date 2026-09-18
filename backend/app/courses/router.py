@@ -50,7 +50,7 @@ async def update_course(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    course = await service.get_course_by_id(db, course_id)
+    course = await service.get_course_by_id(db, course_id, include_inactive=True)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     if course.owner_id != current_user.id and current_user.role != "admin":
@@ -68,7 +68,7 @@ async def delete_course(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    course = await service.get_course_by_id(db, course_id)
+    course = await service.get_course_by_id(db, course_id, include_inactive=True)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     if course.owner_id != current_user.id and current_user.role != "admin":
