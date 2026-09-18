@@ -40,8 +40,8 @@ MAX_SOLUTION_RETRIES = 2  # retry up to 2 times if solution fails execution
 def _clean_llm_response(raw_content: str) -> str:
     cleaned = raw_content.strip()
     if cleaned.startswith("```"):
-        first_newline = cleaned.index("\n")
-        cleaned = cleaned[first_newline + 1:]
+        first_newline = cleaned.find("\n")
+        cleaned = cleaned[first_newline + 1:] if first_newline != -1 else cleaned[3:]
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3].strip()
     return cleaned
