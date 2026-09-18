@@ -22,11 +22,13 @@ async def generate_problems(
     user_id: str,
     request: GenerationRequest,
 ) -> list[Problem]:
-    # Fetch existing problem titles for this topic to avoid duplicates
+    # Fetch existing problem titles and descriptions for this topic
     existing_result = await db.execute(
-        select(Problem.title).where(Problem.topic_id == topic.id)
+        select(Problem.title, Problem.description).where(Problem.topic_id == topic.id)
     )
-    existing_titles = [row[0] for row in existing_result.all()]
+    existing_problems = [
+        {"title": row[0], "description": row[1]} for row in existing_result.all()
+    ]
 
     prompt = build_generation_prompt(
         topic_name=topic.name,
@@ -37,7 +39,7 @@ async def generate_problems(
         num_test_cases=request.num_test_cases,
         test_type=request.test_type,
         custom_instructions=request.custom_instructions,
-        existing_titles=existing_titles,
+        existing_problems=existing_problems,
     )
 
     client = get_openai_client()

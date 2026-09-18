@@ -45,17 +45,46 @@ def build_generation_prompt(
     num_test_cases: int,
     test_type: str,
     custom_instructions: str | None,
-    existing_titles: list[str] | None = None,
+    existing_problems: list[dict] | None = None,
 ) -> str:
     parts = [
         f'Generate {num_problems} NEW and UNIQUE programming problem(s) about "{topic_name}".',
         f"IMPORTANT: The programming language is {language.upper()}. ALL starter_code and solution_code MUST be written in {language.upper()} only. Do NOT use any other programming language.",
+        (
+            "\nCREATIVE PROBLEM MODELING (very important):\n"
+            "The underlying algorithm for each problem can be similar or even identical, but you MUST "
+            "get very creative with how the problem is framed and explained. Wrap the algorithmic "
+            "concept in a vivid, unique real-world scenario or story.\n"
+            "\n"
+            "For example, a simple 'sum of even numbers from 1 to N' problem could be remodeled as:\n"
+            "- A savings story: you receive money every day but only save on even-numbered days. How much did you save?\n"
+            "- A workout tracker: you train daily from day 1 to N, but only even days are heavy workouts. "
+            "Each day number = effort units. What is the total effort on heavy days?\n"
+            "- A factory quality check: products roll off an assembly line numbered 1 to N, but only "
+            "even-numbered products get inspected. Sum of inspected product IDs?\n"
+            "\n"
+            "The student should NOT be able to tell that two problems use the same algorithm just by reading "
+            "the descriptions. Each problem must feel like a genuinely different challenge even if the "
+            "solution logic is the same. Use diverse domains: finance, sports, science, games, cooking, "
+            "travel, nature, music, etc.\n"
+        ),
     ]
-    if existing_titles:
-        titles_list = "\n".join(f"- {t}" for t in existing_titles)
+    if existing_problems:
+        problem_list = "\n".join(
+            f'- "{p["title"]}": {p["description"][:150]}...'
+            if len(p.get("description", "") or "") > 150
+            else f'- "{p["title"]}": {p.get("description", "")}'
+            for p in existing_problems
+        )
         parts.append(
-            f"\nThe following problems ALREADY EXIST for this topic. Do NOT generate duplicates or variations of these. "
-            f"Create completely different problems:\n{titles_list}\n"
+            f"\nEXISTING PROBLEMS for this topic (for context):\n{problem_list}\n\n"
+            "DEDUPLICATION RULES:\n"
+            "- You MUST use a different creative story/scenario/mental model than any existing problem. "
+            "Do NOT reuse the same real-world framing (e.g., if a savings story exists, do not make another savings story).\n"
+            "- You MAY reuse the same underlying algorithmic concept — that is encouraged. "
+            "The goal is many problems that solve the same way but LOOK completely different.\n"
+            "- Each new problem MUST have a unique, descriptive title that reflects its specific story, "
+            "not the algorithm.\n"
         )
     if topic_description:
         parts.append(f"Topic context: {topic_description}")
