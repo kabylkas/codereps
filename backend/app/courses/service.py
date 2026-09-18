@@ -86,6 +86,16 @@ async def get_course_problems(db: AsyncSession, course_id: str) -> list[Problem]
     return list(result.scalars().all())
 
 
+async def course_has_problem(db: AsyncSession, course_id: str, problem_id: str) -> bool:
+    result = await db.execute(
+        select(CourseProblem.id).where(
+            CourseProblem.course_id == course_id,
+            CourseProblem.problem_id == problem_id,
+        )
+    )
+    return result.first() is not None
+
+
 async def add_problem_to_course(db: AsyncSession, course_id: str, problem_id: str, added_by: str) -> CourseProblem:
     cp = CourseProblem(course_id=course_id, problem_id=problem_id, added_by=added_by)
     db.add(cp)

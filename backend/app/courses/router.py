@@ -166,6 +166,8 @@ async def add_problem(
     course = await service.get_course_by_id(db, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+    if await service.course_has_problem(db, course_id, data.problem_id):
+        raise HTTPException(status_code=400, detail="Problem already added to course")
     await service.add_problem_to_course(db, course_id, data.problem_id, current_user.id)
     # Create personalized problem slots for all enrolled students (generates in background)
     await personalization_service.create_slots_for_new_problem(db, course_id, data.problem_id)
