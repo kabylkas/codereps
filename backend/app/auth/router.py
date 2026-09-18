@@ -15,7 +15,7 @@ router = APIRouter()
 async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     if await get_user_by_email(db, data.email):
         raise HTTPException(status_code=400, detail="Email already registered")
-    user = await create_user(db, data.email, data.password, data.full_name)
+    user = await create_user(db, data.email, data.password, data.full_name, data.role)
     return user
 
 
