@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.dependencies import get_db, get_current_user, assert_problem_visible_to
 from app.users.models import User
 from app.problems import service as problem_service
@@ -17,6 +18,16 @@ async def submit_code(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if not settings.code_execution_enabled:
+        # Grading needs a real Docker daemon (app/submissions/runner.py shells
+        # out to `docker run`), which this deployment doesn't have. Fail
+        # clearly and immediately rather than letting the subprocess spawn
+        # fail with a confusing "docker: not found" 500 further down.
+        raise HTTPException(
+            status_code=503,
+            detail="Code execution isn't available on this deployment yet — coming soon.",
+        )
+
     problem = await problem_service.get_problem_by_id(db, problem_id)
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")

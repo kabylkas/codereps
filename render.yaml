@@ -1,0 +1,75 @@
+# Render Blueprint — deploys frontend + backend + a free Postgres.
+#
+# Scope: this deploys the app WITHOUT sandboxed code execution. Submission
+# grading (app/submissions/runner.py) shells out to `docker run`, and Render's
+# web services don't expose a Docker daemon — no plan tier changes that. The
+# backend is deployed with CODE_EXECUTION_ENABLED=false, which makes
+# /submit return a clean 503 instead of crashing, and the frontend shows a
+# "coming soon" notice on the solve page instead of a broken Submit button.
+# See AGENTS.md and REVIEW.md for the reasoning and what re-enabling it needs.
+#
+# One-time manual steps after the first Blueprint deploy (Render can't know
+# these URLs until the services exist):
+#   1. Backend finishes deploying -> copy its URL (https://codereps-backend-XXXX.onrender.com).
+#   2. Frontend service -> Environment -> set VITE_API_URL to that URL + "/api",
+#      then trigger a manual redeploy (Vite bakes env vars in at BUILD time,
+#      so just editing the var isn't enough).
+#   3. Frontend finishes deploying -> copy its URL.
+#   4. Backend service -> Environment -> set CORS_ORIGINS to that URL,
+#      then trigger a manual redeploy.
+#   5. Backend service -> Environment -> set OPENROUTER_API_KEY if you want AI
+#      problem generation and personalization. Leave blank to run without it —
+#      see the known-blocker note in CLAUDE.md about what that disables.
+#
+# The free Postgres plan below is deleted 30 days after creation unless
+# upgraded (Render's current policy, verified at render.com/docs/free). For a
+# database that doesn't expire, point DATABASE_URL at an external free
+# Postgres (Neon, Supabase) instead and remove the `databases:` block.
+
+databases:
+  - name: codereps-db
+    plan: free
+    databaseName: codereps
+    user: codereps
+
+services:
+  - type: web
+    name: codereps-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install uv && uv sync
+    preDeployCommand: uv run alembic upgrade head
+    startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.9"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: codereps-db
+          property: connectionString
+      - key: CODE_EXECUTION_ENABLED
+        value: "false"
+      # Placeholder — set to the frontend's real URL after its first deploy
+      # (step 4 above). Until then CORS blocks the deployed frontend.
+      - key: CORS_ORIGINS
+        value: "https://REPLACE-WITH-YOUR-FRONTEND-URL.onrender.com"
+      # Optional. Blank disables AI generation + personalization; everything
+      # else (courses, manual problems, the practice loop UI) still works.
+      - key: OPENROUTER_API_KEY
+        sync: false
+
+  - type: web
+    name: codereps-frontend
+    runtime: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      # Placeholder — set to the backend's real URL + "/api" after its first
+      # deploy (step 2 above), then trigger a manual redeploy to rebake it.
+      - key: VITE_API_URL
+        value: "https://REPLACE-WITH-YOUR-BACKEND-URL.onrender.com/api"

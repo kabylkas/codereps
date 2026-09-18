@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
+import client from "../../api/client";
 import { getProblem, getPersonalizedProblem } from "../../api/problems";
 import { submitCode, getSubmissions } from "../../api/submissions";
 import type { Problem } from "../../types/problem";
@@ -24,6 +25,16 @@ export default function ProblemSolvePage() {
   const [result, setResult] = useState<Submission | null>(null);
   const [history, setHistory] = useState<SubmissionSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  // Optimistic default: only show the "coming soon" notice once the backend
+  // has actually told us grading is off, never on a flaky health check.
+  const [codeExecutionEnabled, setCodeExecutionEnabled] = useState(true);
+
+  useEffect(() => {
+    client
+      .get("/health")
+      .then((res) => setCodeExecutionEnabled(res.data?.code_execution_enabled ?? true))
+      .catch(() => setCodeExecutionEnabled(true));
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -143,6 +154,20 @@ export default function ProblemSolvePage() {
 
       {/* Right: Code editor + results */}
       <div className="w-[55%] flex flex-col min-h-0">
+        {/* Grading unavailable notice */}
+        {!codeExecutionEnabled && (
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-warning/20 bg-warning-dim px-3 py-2 animate-fade-in">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-warning shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4" />
+              <path d="M12 16h.01" />
+            </svg>
+            <p className="text-xs text-warning">
+              Grading isn't available on this deployment yet — <span className="font-semibold">code execution is coming soon.</span> You can still read and write solutions here.
+            </p>
+          </div>
+        )}
+
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -155,8 +180,9 @@ export default function ProblemSolvePage() {
           </div>
           <button
             onClick={handleSubmit}
-            disabled={submitting || !code.trim()}
-            className="bg-lime text-[#FDFAF5] px-5 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)] flex items-center gap-2"
+            disabled={submitting || !code.trim() || !codeExecutionEnabled}
+            title={codeExecutionEnabled ? undefined : "Code execution is coming soon on this deployment"}
+            className="bg-lime text-[#FDFAF5] px-5 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)] flex items-center gap-2"
           >
             {submitting ? (
               <>
@@ -164,6 +190,14 @@ export default function ProblemSolvePage() {
                   <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                 </svg>
                 Running...
+              </>
+            ) : !codeExecutionEnabled ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Coming soon
               </>
             ) : (
               <>

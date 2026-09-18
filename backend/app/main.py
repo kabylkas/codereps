@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.router import router as auth_router
+from app.config import settings
 from app.users.router import router as users_router
 from app.courses.router import router as courses_router
 from app.problems.router import router as problems_router
@@ -13,7 +14,7 @@ app = FastAPI(title="codereps.ai", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,4 +31,7 @@ app.include_router(submissions_router, prefix="/api", tags=["submissions"])
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok"}
+    # code_execution_enabled lets the frontend show a "coming soon" notice
+    # instead of letting a student hit a submit endpoint that will 503 —
+    # see app/submissions/router.py.
+    return {"status": "ok", "code_execution_enabled": settings.code_execution_enabled}

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
+from app.config import settings
 from app.database import Base
 from app.users.models import User  # noqa: F401
 from app.courses.models import Course, CourseEnrollment  # noqa: F401
@@ -17,6 +18,12 @@ config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# alembic.ini hardcodes a SQLite URL for local dev. Override it with whatever
+# the app is actually configured for (DATABASE_URL / .env), so `alembic
+# upgrade head` targets the same database the app connects to — Postgres in
+# production, SQLite locally.
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 target_metadata = Base.metadata
 
