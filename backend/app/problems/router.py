@@ -40,10 +40,11 @@ async def list_problems(
     difficulty: str | None = None,
     language: str | None = None,
     tag: str | None = None,
+    topic_id: str | None = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return await service.get_problems(db, difficulty=difficulty, language=language, tag=tag)
+    return await service.get_problems(db, difficulty=difficulty, language=language, tag=tag, topic_id=topic_id)
 
 
 @router.get("/tags", response_model=list[TagResponse])

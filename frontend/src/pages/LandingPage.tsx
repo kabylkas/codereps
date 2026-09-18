@@ -249,8 +249,7 @@ export default function LandingPage() {
   const { isAuthenticated, loading } = useAuth();
   const rootRef = useScrollReveal();
 
-  if (loading) return null;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (!loading && isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   return (
     <div ref={rootRef} className="min-h-screen bg-base text-text-primary overflow-x-hidden">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getTopics, createTopic, deleteTopic } from "../../api/topics";
 import type { Topic } from "../../types/topic";
 import GenerationDialog from "./GenerationDialog";
@@ -117,12 +118,20 @@ export default function TopicManagementPanel({ courseId, courseLanguage, isOwner
           {topics.map((topic) => (
             <div key={topic.id} className="rounded-xl border border-border bg-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4">
-                <div>
-                  <h3 className="font-display font-bold text-text-primary">{topic.name}</h3>
+                <Link
+                  to={`/problems?course_id=${courseId}&topic_id=${topic.id}`}
+                  className="group/topic"
+                >
+                  <h3 className="font-display font-bold text-text-primary group-hover/topic:text-lime transition-colors flex items-center gap-2">
+                    {topic.name}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 group-hover/topic:opacity-100 transition-opacity">
+                      <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </h3>
                   {topic.description && (
                     <p className="text-sm text-text-tertiary mt-0.5">{topic.description}</p>
                   )}
-                </div>
+                </Link>
                 {isOwner && (
                   <div className="flex items-center gap-2">
                     <button

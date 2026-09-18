@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { generateProblems } from "../../api/generation";
+import { useState, useRef } from "react";
+import { generateProblemsStream } from "../../api/generation";
 import type { GenerationRequest, Problem } from "../../types/problem";
+import type { GenerationEvent } from "../../api/generation";
 
 interface Props {
   topicId: string;
@@ -8,6 +9,12 @@ interface Props {
   courseLanguage: string;
   onClose: () => void;
   onGenerated: () => void;
+}
+
+interface LogEntry {
+  message: string;
+  type: "info" | "success" | "error";
+  timestamp: Date;
 }
 
 export default function GenerationDialog({ topicId, topicName, courseLanguage, onClose, onGenerated }: Props) {
@@ -21,51 +28,190 @@ export default function GenerationDialog({ topicId, topicName, courseLanguage, o
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [generated, setGenerated] = useState<Problem[] | null>(null);
+  const [generated, setGenerated] = useState<Problem[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [phase, setPhase] = useState<string>("");
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
+  const [done, setDone] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const logEndRef = useRef<HTMLDivElement>(null);
 
-  const handleGenerate = async (e: React.FormEvent) => {
+  const addLog = (message: string, type: LogEntry["type"] = "info") => {
+    setLogs((prev) => [...prev, { message, type, timestamp: new Date() }]);
+    setTimeout(() => logEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  };
+
+  const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const problems = await generateProblems({ ...form, topic_id: topicId });
-      setGenerated(problems);
-      onGenerated();
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { detail?: string } } };
-      setError(axiosErr.response?.data?.detail || "Generation failed. Check your API key.");
-    } finally {
-      setLoading(false);
+    setLogs([]);
+    setGenerated([]);
+    setPhase("");
+    setProgress(null);
+    setDone(false);
+
+    const controller = generateProblemsStream(
+      { ...form, topic_id: topicId },
+      (event: GenerationEvent) => {
+        switch (event.type) {
+          case "status":
+            setPhase(event.data.phase || "");
+            if (event.data.current && event.data.total) {
+              setProgress({ current: event.data.current, total: event.data.total });
+            }
+            addLog(event.data.message || "", "info");
+            break;
+          case "problem_saved":
+            if (event.data.problem) {
+              setGenerated((prev) => [...prev, event.data.problem!]);
+            }
+            if (event.data.current && event.data.total) {
+              setProgress({ current: event.data.current, total: event.data.total });
+            }
+            addLog(`Saved: ${event.data.problem?.title || "problem"}`, "success");
+            break;
+          case "done":
+            setDone(true);
+            setLoading(false);
+            setPhase("done");
+            addLog(event.data.message || "Done!", "success");
+            onGenerated();
+            break;
+          case "error":
+            setError(event.data.message || "Generation failed");
+            setLoading(false);
+            addLog(event.data.message || "Error", "error");
+            break;
+        }
+      },
+    );
+    abortRef.current = controller;
+  };
+
+  const handleCancel = () => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setLoading(false);
+    if (!done && generated.length === 0) {
+      onClose();
     }
   };
 
   const update = (field: string, value: unknown) => setForm((f) => ({ ...f, [field]: value }));
 
-  if (generated) {
+  // Active generation view with live logs
+  if (loading || done || generated.length > 0) {
     return (
-      <div className="border-t border-border px-5 py-5 bg-success-dim/30 animate-fade-in">
-        <div className="flex items-center gap-2 mb-3">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          <h4 className="font-display font-bold text-success">
-            Generated {generated.length} problems
+      <div className="border-t border-border px-5 py-5 bg-info-dim/30 animate-fade-in">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-display font-bold text-sm flex items-center gap-2">
+            {done ? (
+              <>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span className="text-success">Generation Complete</span>
+              </>
+            ) : (
+              <>
+                <svg className="animate-spin text-info" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                <span className="text-info">Generating for "{topicName}"</span>
+              </>
+            )}
           </h4>
+          {done && (
+            <button onClick={onClose} className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
+              Close
+            </button>
+          )}
         </div>
-        <ul className="space-y-1.5 mb-4">
-          {generated.map((p) => (
-            <li key={p.id} className="text-sm text-text-secondary flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-success" />
-              <span className="text-text-primary font-medium">{p.title}</span>
-              <span className="text-text-tertiary text-xs">({p.difficulty})</span>
-              <span className="text-text-tertiary text-xs">{p.test_cases?.length || 0} tests</span>
-            </li>
+
+        {/* Progress bar */}
+        {progress && (
+          <div className="mb-4">
+            <div className="flex justify-between text-xs text-text-tertiary mb-1.5">
+              <span>{phase === "calling_llm" ? "Waiting for AI..." : `Problem ${progress.current} of ${progress.total}`}</span>
+              <span>{Math.round((progress.current / progress.total) * 100)}%</span>
+            </div>
+            <div className="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500 ease-out"
+                style={{
+                  width: `${(progress.current / progress.total) * 100}%`,
+                  backgroundColor: done ? "var(--color-success)" : "var(--color-info)",
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Live log */}
+        <div className="rounded-lg border border-border bg-[#0c0d12] p-3 max-h-48 overflow-y-auto font-mono text-xs space-y-1">
+          {phase === "calling_llm" && logs.length <= 1 && (
+            <div className="flex items-center gap-2 text-text-tertiary">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-info animate-pulse" />
+              Waiting for AI response... This may take a moment.
+            </div>
+          )}
+          {logs.map((log, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="text-text-tertiary shrink-0">
+                {log.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+              <span className={
+                log.type === "success" ? "text-success" :
+                log.type === "error" ? "text-error" :
+                "text-text-secondary"
+              }>
+                {log.type === "success" && "✓ "}
+                {log.type === "error" && "✗ "}
+                {log.message}
+              </span>
+            </div>
           ))}
-        </ul>
-        <button onClick={onClose} className="text-sm text-success hover:text-success/80 font-medium transition-colors">
-          Close
-        </button>
+          <div ref={logEndRef} />
+        </div>
+
+        {/* Generated problems list */}
+        {generated.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs font-medium text-text-tertiary uppercase tracking-wider">
+              Generated Problems ({generated.length})
+            </p>
+            {generated.map((p) => (
+              <div key={p.id} className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface/50 px-4 py-2.5 animate-fade-in">
+                <div className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
+                <span className="text-sm text-text-primary font-medium flex-1">{p.title}</span>
+                <span className="text-[10px] text-text-tertiary">{p.difficulty}</span>
+                <span className="text-[10px] text-text-tertiary">{p.test_cases?.length || 0} tests</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="mt-3 bg-error-dim border border-error/20 rounded-lg px-4 py-3">
+            <p className="text-error text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Cancel button while loading */}
+        {loading && (
+          <button
+            onClick={handleCancel}
+            className="mt-3 px-4 py-2 rounded-lg text-sm text-text-secondary border border-border hover:border-surface-3 transition-colors"
+          >
+            Cancel
+          </button>
+        )}
       </div>
     );
   }
@@ -163,19 +309,9 @@ export default function GenerationDialog({ topicId, topicName, courseLanguage, o
         <div className="flex gap-2">
           <button
             type="submit"
-            disabled={loading}
-            className="bg-info text-[#0c0d12] px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-info/90 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
+            className="bg-info text-[#0c0d12] px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-info/90 transition-all duration-200 flex items-center gap-2"
           >
-            {loading ? (
-              <>
-                <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
-                Generating...
-              </>
-            ) : (
-              "Generate"
-            )}
+            Generate
           </button>
           <button
             type="button"

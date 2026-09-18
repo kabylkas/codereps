@@ -39,6 +39,7 @@ async def get_problems(
     difficulty: str | None = None,
     language: str | None = None,
     tag: str | None = None,
+    topic_id: str | None = None,
 ) -> list[Problem]:
     query = select(Problem).options(selectinload(Problem.tags), selectinload(Problem.test_cases))
     if difficulty:
@@ -47,6 +48,8 @@ async def get_problems(
         query = query.where(Problem.language == language)
     if tag:
         query = query.join(problem_tag_association).join(ProblemTag).where(ProblemTag.name == tag)
+    if topic_id:
+        query = query.where(Problem.topic_id == topic_id)
     query = query.order_by(Problem.created_at.desc())
     result = await db.execute(query)
     return list(result.scalars().all())

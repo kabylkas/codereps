@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getProblems, getTags } from "../../api/problems";
+import { getTopics } from "../../api/topics";
 import { addProblemToCourse } from "../../api/courses";
 import type { Problem, ProblemTag } from "../../types/problem";
+import type { Topic } from "../../types/topic";
 
 const difficultyColors: Record<string, string> = {
   easy: "bg-success-dim text-success",
@@ -16,9 +18,13 @@ export default function ProblemListPage() {
   const [searchParams] = useSearchParams();
   const courseId = searchParams.get("course");
 
+  const topicIdParam = searchParams.get("topic_id") || "";
+  const courseIdForTopics = searchParams.get("course") || searchParams.get("course_id") || "";
+
   const [problems, setProblems] = useState<Problem[]>([]);
   const [tags, setTags] = useState<ProblemTag[]>([]);
-  const [filters, setFilters] = useState({ difficulty: "", language: "", tag: "" });
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [filters, setFilters] = useState({ difficulty: "", language: "", tag: "", topic_id: topicIdParam });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,11 +32,24 @@ export default function ProblemListPage() {
   }, []);
 
   useEffect(() => {
+    if (courseIdForTopics) {
+      getTopics(courseIdForTopics).then(setTopics);
+    }
+  }, [courseIdForTopics]);
+
+  useEffect(() => {
+    if (topicIdParam && topicIdParam !== filters.topic_id) {
+      setFilters((f) => ({ ...f, topic_id: topicIdParam }));
+    }
+  }, [topicIdParam]);
+
+  useEffect(() => {
     setLoading(true);
     const params: Record<string, string> = {};
     if (filters.difficulty) params.difficulty = filters.difficulty;
     if (filters.language) params.language = filters.language;
     if (filters.tag) params.tag = filters.tag;
+    if (filters.topic_id) params.topic_id = filters.topic_id;
     getProblems(params)
       .then(setProblems)
       .finally(() => setLoading(false));
@@ -118,6 +137,18 @@ export default function ProblemListPage() {
             <option key={t.id} value={t.name}>{t.name}</option>
           ))}
         </select>
+        {topics.length > 0 && (
+          <select
+            value={filters.topic_id}
+            onChange={(e) => setFilters((f) => ({ ...f, topic_id: e.target.value }))}
+            className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors cursor-pointer"
+          >
+            <option value="">All Topics</option>
+            {topics.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Table */}

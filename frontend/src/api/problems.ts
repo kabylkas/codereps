@@ -5,6 +5,7 @@ export async function getProblems(params?: {
   difficulty?: string;
   language?: string;
   tag?: string;
+  topic_id?: string;
 }): Promise<Problem[]> {
   const res = await client.get("/problems", { params });
   return res.data;
