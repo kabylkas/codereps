@@ -5,8 +5,9 @@ import * as authApi from "../api/auth";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -29,8 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (username: string, password: string) => {
-    const tokenRes = await authApi.login({ username, password });
+  const login = async (email: string, password: string) => {
+    // OAuth2 spec requires 'username' field — we send email as that value
+    const tokenRes = await authApi.login({ username: email, password });
     localStorage.setItem("access_token", tokenRes.access_token);
     const me = await authApi.getMe();
     setUser(me);
@@ -41,8 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const me = await authApi.getMe();
+    setUser(me);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

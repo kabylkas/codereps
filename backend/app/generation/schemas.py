@@ -13,19 +13,22 @@ class GenerationRequest(BaseModel):
     custom_instructions: str | None = None
 
 
-class LLMTestCase(BaseModel):
-    input_data: str
-    expected_output: str
-    metadata_json: str | None = None
-
-
-class LLMProblem(BaseModel):
+# Step 1: Problem statements from Gemini
+class LLMProblemStatement(BaseModel):
     title: str
     description: str
     starter_code: str | None = None
-    solution_code: str | None = None
-    test_cases: list[LLMTestCase] = []
 
 
-class LLMResponse(BaseModel):
-    problems: list[LLMProblem]
+class LLMProblemStatementsResponse(BaseModel):
+    problems: list[LLMProblemStatement]
+
+
+# Step 2: Solution from Mimo
+class LLMSolutionResponse(BaseModel):
+    solution_code: str
+
+
+# Step 3: Test inputs from Mimo (expected outputs come from execution)
+class LLMTestInputsResponse(BaseModel):
+    inputs: list[str]

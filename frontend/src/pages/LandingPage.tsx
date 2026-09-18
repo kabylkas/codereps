@@ -120,8 +120,8 @@ function PrimaryButton({ children, to, large }: { children: React.ReactNode; to:
   return (
     <Link
       to={to}
-      className={`group inline-flex items-center gap-2 rounded-lg bg-lime font-semibold text-base transition-all hover:bg-lime-hover hover:shadow-[0_0_32px_rgba(200,255,46,0.25)] active:scale-[0.97] ${large ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"}`}
-      style={{ color: "#0c0d12" }}
+      className={`group inline-flex items-center gap-2 rounded-lg bg-lime font-semibold text-base transition-all hover:bg-lime-hover hover:shadow-[0_0_32px_rgba(74,103,65,0.2)] active:scale-[0.97] ${large ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"}`}
+      style={{ color: "#FDFAF5" }}
     >
       {children}
       <Icon.ArrowRight />
@@ -189,7 +189,7 @@ function HeroCodeBlock() {
         <p className="pl-12"><span className="text-info">return</span> path + [node]</p>
       </div>
       {/* Floating badge */}
-      <div className="absolute -top-3 -right-3 rounded-full bg-lime px-3 py-1 text-xs font-bold" style={{ color: "#0c0d12" }}>
+      <div className="absolute -top-3 -right-3 rounded-full bg-lime px-3 py-1 text-xs font-bold" style={{ color: "#FDFAF5" }}>
         Rep #42
       </div>
     </div>
@@ -216,7 +216,7 @@ function StepCard({ step, title, desc }: { step: string; title: string; desc: st
    ──────────────────────────────────────────── */
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
-    <div className="group rounded-xl border border-border bg-surface p-6 transition-all hover:border-lime/30 hover:shadow-[0_0_32px_-8px_rgba(200,255,46,0.12)]">
+    <div className="group rounded-xl border border-border bg-surface p-6 transition-all hover:border-lime/30 hover:shadow-[0_0_32px_-8px_rgba(74,103,65,0.1)]">
       <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-lime-dim text-lime mb-4 transition-transform group-hover:scale-110">
         {icon}
       </div>
@@ -285,7 +285,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-base/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-lime font-display font-extrabold text-sm" style={{ color: "#0c0d12" }}>
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-lime font-display font-extrabold text-sm" style={{ color: "#FDFAF5" }}>
               cr
             </div>
             <span className="font-display text-lg font-bold text-text-primary">
@@ -301,8 +301,8 @@ export default function LandingPage() {
             </Link>
             <Link
               to="/register"
-              className="rounded-lg bg-lime px-4 py-2 text-sm font-semibold transition-all hover:bg-lime-hover hover:shadow-[0_0_24px_rgba(200,255,46,0.2)]"
-              style={{ color: "#0c0d12" }}
+              className="rounded-lg bg-lime px-4 py-2 text-sm font-semibold transition-all hover:bg-lime-hover hover:shadow-[0_0_24px_rgba(74,103,65,0.15)]"
+              style={{ color: "#FDFAF5" }}
             >
               Get Started
             </Link>
@@ -633,7 +633,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-7 h-7 rounded-md bg-lime font-display font-extrabold text-xs" style={{ color: "#0c0d12" }}>
+              <div className="flex items-center justify-center w-7 h-7 rounded-md bg-lime font-display font-extrabold text-xs" style={{ color: "#FDFAF5" }}>
                 cr
               </div>
               <span className="font-display text-sm font-bold text-text-primary">

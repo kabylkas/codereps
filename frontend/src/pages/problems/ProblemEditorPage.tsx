@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createProblem, getProblem, updateProblem, getTags } from "../../api/problems";
 import type { ProblemTag } from "../../types/problem";
+import CodeEditor from "../../components/ui/CodeEditor";
 
 export default function ProblemEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -136,23 +137,23 @@ export default function ProblemEditorPage() {
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">Starter Code</label>
-          <textarea
+          <CodeEditor
             value={form.starter_code}
-            onChange={(e) => update("starter_code", e.target.value)}
-            className="w-full bg-[#0c0d12] border border-border rounded-lg px-4 py-3 text-sm text-lime/80 font-mono placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors resize-none"
-            rows={6}
+            onChange={(v) => update("starter_code", v)}
+            language={form.language}
             placeholder="Code that students start with..."
+            style={{ minHeight: "160px" }}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">Solution Code</label>
-          <textarea
+          <CodeEditor
             value={form.solution_code}
-            onChange={(e) => update("solution_code", e.target.value)}
-            className="w-full bg-[#0c0d12] border border-border rounded-lg px-4 py-3 text-sm text-lime/80 font-mono placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors resize-none"
-            rows={6}
+            onChange={(v) => update("solution_code", v)}
+            language={form.language}
             placeholder="Reference solution..."
+            style={{ minHeight: "160px" }}
           />
         </div>
 
@@ -166,7 +167,7 @@ export default function ProblemEditorPage() {
                 onClick={() => toggleTag(tag.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                   form.tag_ids.includes(tag.id)
-                    ? "bg-lime text-[#0c0d12]"
+                    ? "bg-lime text-[#FDFAF5]"
                     : "bg-surface-2 text-text-tertiary border border-border hover:border-surface-3 hover:text-text-secondary"
                 }`}
               >
@@ -181,7 +182,7 @@ export default function ProblemEditorPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-lime text-[#0c0d12] px-6 py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
+            className="bg-lime text-[#FDFAF5] px-6 py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
           >
             {loading ? "Saving..." : isEdit ? "Update Problem" : "Create Problem"}
           </button>

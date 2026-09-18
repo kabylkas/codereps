@@ -1,9 +1,9 @@
 export interface User {
   id: string;
   email: string;
-  username: string;
   full_name: string;
   role: "admin" | "professor" | "student";
+  position: string | null;
   is_active: boolean;
 }
 
@@ -14,7 +14,6 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   email: string;
-  username: string;
   password: string;
   full_name: string;
 }

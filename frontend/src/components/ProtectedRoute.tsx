@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
       <div className="flex items-center justify-center h-screen bg-base">
         <div className="flex flex-col items-center gap-4 animate-fade-in">
           <div className="w-10 h-10 rounded-lg bg-lime flex items-center justify-center animate-[pulse-glow_2s_ease-in-out_infinite]">
-            <span className="font-mono font-bold text-base text-[#0c0d12]">{"{}"}</span>
+            <span className="font-mono font-bold text-base text-[#FDFAF5]">{"{}"}</span>
           </div>
           <p className="text-sm text-text-tertiary font-mono">Loading...</p>
         </div>

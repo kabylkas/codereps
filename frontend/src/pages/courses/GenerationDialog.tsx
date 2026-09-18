@@ -153,7 +153,7 @@ export default function GenerationDialog({ topicId, topicName, courseLanguage, o
         )}
 
         {/* Live log */}
-        <div className="rounded-lg border border-border bg-[#0c0d12] p-3 max-h-48 overflow-y-auto font-mono text-xs space-y-1">
+        <div className="rounded-lg border border-border bg-[#2A2623] p-3 max-h-48 overflow-y-auto font-mono text-xs space-y-1">
           {phase === "calling_llm" && logs.length <= 1 && (
             <div className="flex items-center gap-2 text-text-tertiary">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-info animate-pulse" />
@@ -309,7 +309,7 @@ export default function GenerationDialog({ topicId, topicName, courseLanguage, o
         <div className="flex gap-2">
           <button
             type="submit"
-            className="bg-info text-[#0c0d12] px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-info/90 transition-all duration-200 flex items-center gap-2"
+            className="bg-info text-[#FDFAF5] px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-info/90 transition-all duration-200 flex items-center gap-2"
           >
             Generate
           </button>

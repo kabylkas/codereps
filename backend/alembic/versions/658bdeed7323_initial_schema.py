@@ -30,15 +30,14 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('id', sa.String(length=36), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('username', sa.String(length=100), nullable=False),
     sa.Column('hashed_password', sa.String(length=255), nullable=False),
     sa.Column('full_name', sa.String(length=255), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=False),
+    sa.Column('position', sa.String(length=100), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('username')
     )
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_users_email'), ['email'], unique=True)

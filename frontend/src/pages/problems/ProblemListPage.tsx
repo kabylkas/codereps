@@ -79,7 +79,7 @@ export default function ProblemListPage() {
         {(user?.role === "professor" || user?.role === "admin") && (
           <Link
             to="/problems/new"
-            className="bg-lime text-[#0c0d12] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-lime-hover transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)] flex items-center gap-2"
+            className="bg-lime text-[#FDFAF5] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-lime-hover transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)] flex items-center gap-2"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />

@@ -13,6 +13,7 @@ import ProblemEditorPage from "./pages/problems/ProblemEditorPage";
 import ProblemViewPage from "./pages/problems/ProblemViewPage";
 import ProblemSolvePage from "./pages/problems/ProblemSolvePage";
 import LandingPage from "./pages/LandingPage";
+import ProfilePage from "./pages/ProfilePage";
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/problems/:id" element={<ProblemViewPage />} />
             <Route path="/problems/:id/solve" element={<ProblemSolvePage />} />
             <Route path="/problems/:id/edit" element={<ProtectedRoute allowedRoles={["professor", "admin"]}><ProblemEditorPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

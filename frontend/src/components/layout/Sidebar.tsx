@@ -63,7 +63,7 @@ export default function Sidebar() {
       <div className="px-5 py-5 border-b border-border-subtle">
         <Link to="/dashboard" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg bg-lime flex items-center justify-center transition-shadow duration-300 group-hover:shadow-[0_0_16px_var(--color-lime-glow)]">
-            <span className="font-mono font-bold text-base text-[#0c0d12]">{"{}"}</span>
+            <span className="font-mono font-bold text-base text-[#FDFAF5]">{"{}"}</span>
           </div>
           <div>
             <span className="font-display font-bold text-base text-text-primary tracking-tight">
@@ -102,10 +102,24 @@ export default function Sidebar() {
       {/* User badge */}
       {user && (
         <div className="px-3 pb-4">
-          <div className="px-3 py-3 rounded-lg bg-surface-2 border border-border-subtle">
-            <p className="text-sm font-medium text-text-primary truncate">{user.full_name}</p>
-            <p className="text-xs text-text-tertiary mt-0.5 font-mono">{user.role}</p>
-          </div>
+          <Link
+            to="/profile"
+            className={`flex items-center gap-3 px-3 py-3 rounded-lg border transition-all duration-200 ${
+              location.pathname === "/profile"
+                ? "bg-lime-dim border-lime/20"
+                : "bg-surface-2 border-border-subtle hover:border-border"
+            }`}
+          >
+            <div className="w-8 h-8 rounded-full bg-lime flex items-center justify-center shrink-0">
+              <span className="font-display font-bold text-xs text-[#FDFAF5]">
+                {user.full_name?.charAt(0)?.toUpperCase()}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-text-primary truncate">{user.full_name}</p>
+              <p className="text-xs text-text-tertiary mt-0.5 font-mono">{user.role}</p>
+            </div>
+          </Link>
         </div>
       )}
     </aside>

@@ -135,7 +135,6 @@ export default function CourseDetailPage() {
                   <tr className="border-b border-border">
                     <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Name</th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Email</th>
-                    <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Username</th>
                     <th className="px-5 py-3" />
                   </tr>
                 </thead>
@@ -144,7 +143,6 @@ export default function CourseDetailPage() {
                     <tr key={s.id} className="border-t border-border-subtle hover:bg-surface-2/50 transition-colors">
                       <td className="px-5 py-3 text-text-primary">{s.full_name}</td>
                       <td className="px-5 py-3 text-text-secondary">{s.email}</td>
-                      <td className="px-5 py-3 font-mono text-text-tertiary text-xs">{s.username}</td>
                       <td className="px-5 py-3 text-right">
                         <button
                           onClick={async () => {
@@ -177,7 +175,7 @@ export default function CourseDetailPage() {
             <div className="mb-5">
               <Link
                 to={`/problems?course=${course.id}`}
-                className="inline-flex items-center gap-2 bg-lime text-[#0c0d12] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-lime-hover transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
+                className="inline-flex items-center gap-2 bg-lime text-[#FDFAF5] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-lime-hover transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" />

@@ -78,7 +78,7 @@ export default function CourseCreatePage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-lime text-[#0c0d12] px-6 py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
+            className="bg-lime text-[#FDFAF5] px-6 py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)]"
           >
             {loading ? "Creating..." : "Create Course"}
           </button>

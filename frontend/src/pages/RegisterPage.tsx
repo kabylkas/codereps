@@ -4,7 +4,6 @@ import * as authApi from "../api/auth";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
-    username: "",
     email: "",
     password: "",
     full_name: "",
@@ -37,7 +36,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex items-center gap-2.5 justify-center mb-10">
           <div className="w-10 h-10 rounded-xl bg-lime flex items-center justify-center">
-            <span className="font-mono font-bold text-lg text-[#0c0d12]">{"{}"}</span>
+            <span className="font-mono font-bold text-lg text-[#FDFAF5]">{"{}"}</span>
           </div>
           <div>
             <span className="font-display font-bold text-2xl text-text-primary">codereps</span>
@@ -55,29 +54,16 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">Full Name</label>
-              <input
-                type="text"
-                value={form.full_name}
-                onChange={(e) => update("full_name", e.target.value)}
-                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors"
-                placeholder="Jane Smith"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">Username</label>
-              <input
-                type="text"
-                value={form.username}
-                onChange={(e) => update("username", e.target.value)}
-                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors"
-                placeholder="jsmith"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Full Name</label>
+            <input
+              type="text"
+              value={form.full_name}
+              onChange={(e) => update("full_name", e.target.value)}
+              className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors"
+              placeholder="Jane Smith"
+              required
+            />
           </div>
 
           <div>
@@ -133,7 +119,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-lime text-[#0c0d12] py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_24px_var(--color-lime-glow)] mt-2"
+            className="w-full bg-lime text-[#FDFAF5] py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_24px_var(--color-lime-glow)] mt-2"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>

@@ -8,6 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Block Prism's default light theme CSS — we use our own in index.css
+      'prismjs/themes/prism.css': path.resolve(__dirname, './src/empty.css'),
     },
   },
 })

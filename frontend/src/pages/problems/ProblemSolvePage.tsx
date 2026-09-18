@@ -5,6 +5,8 @@ import { getProblem } from "../../api/problems";
 import { submitCode, getSubmissions } from "../../api/submissions";
 import type { Problem } from "../../types/problem";
 import type { Submission, SubmissionSummary } from "../../types/submission";
+import CodeEditor from "../../components/ui/CodeEditor";
+import Markdown from "react-markdown";
 
 const difficultyColors: Record<string, string> = {
   easy: "bg-success-dim text-success",
@@ -50,19 +52,6 @@ export default function ProblemSolvePage() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      const target = e.target as HTMLTextAreaElement;
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-      const newCode = code.substring(0, start) + "    " + code.substring(end);
-      setCode(newCode);
-      setTimeout(() => {
-        target.selectionStart = target.selectionEnd = start + 4;
-      }, 0);
-    }
-  };
 
   if (loading || !problem) {
     return (
@@ -99,7 +88,9 @@ export default function ProblemSolvePage() {
 
         {/* Description */}
         <div className="rounded-xl border border-border bg-surface p-5">
-          <div className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">{problem.description}</div>
+          <div className="text-sm text-text-secondary leading-relaxed prose-custom">
+            <Markdown>{problem.description}</Markdown>
+          </div>
         </div>
 
         {/* Example test cases */}
@@ -112,11 +103,11 @@ export default function ProblemSolvePage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-[10px] text-text-tertiary mb-1">Input</p>
-                    <pre className="bg-[#0c0d12] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.input_data}</pre>
+                    <pre className="bg-[#2A2623] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.input_data}</pre>
                   </div>
                   <div>
                     <p className="text-[10px] text-text-tertiary mb-1">Expected</p>
-                    <pre className="bg-[#0c0d12] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.expected_output}</pre>
+                    <pre className="bg-[#2A2623] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.expected_output}</pre>
                   </div>
                 </div>
               </div>
@@ -169,7 +160,7 @@ export default function ProblemSolvePage() {
           <button
             onClick={handleSubmit}
             disabled={submitting || !code.trim()}
-            className="bg-lime text-[#0c0d12] px-5 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)] flex items-center gap-2"
+            className="bg-lime text-[#FDFAF5] px-5 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_var(--color-lime-glow)] flex items-center gap-2"
           >
             {submitting ? (
               <>
@@ -190,16 +181,13 @@ export default function ProblemSolvePage() {
         </div>
 
         {/* Code editor */}
-        <div className="flex-1 relative rounded-xl overflow-hidden border border-border min-h-[300px]">
-          {/* Line numbers background effect */}
-          <div className="absolute left-0 top-0 bottom-0 w-12 bg-surface-2/30 pointer-events-none" />
-          <textarea
+        <div className="flex-1 min-h-[300px]">
+          <CodeEditor
             value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full h-full font-mono text-sm bg-[#0c0d12] text-lime/90 p-4 pl-14 resize-none focus:outline-none"
+            onChange={setCode}
+            language={language}
             placeholder="Write your solution here..."
-            spellCheck={false}
+            style={{ minHeight: "300px", height: "100%" }}
           />
         </div>
 
@@ -243,13 +231,13 @@ export default function ProblemSolvePage() {
                   {!r.passed && r.actual_output && (
                     <div className="mt-2">
                       <p className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">Your output</p>
-                      <pre className="bg-[#0c0d12] rounded p-2 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{r.actual_output}</pre>
+                      <pre className="bg-[#2A2623] rounded p-2 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{r.actual_output}</pre>
                     </div>
                   )}
                   {r.error_message && (
                     <div className="mt-2">
                       <p className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">Error</p>
-                      <pre className="bg-[#0c0d12] rounded p-2 text-xs text-error font-mono overflow-x-auto border border-border-subtle">
+                      <pre className="bg-[#2A2623] rounded p-2 text-xs text-error font-mono overflow-x-auto border border-border-subtle">
                         {r.error_message}
                       </pre>
                     </div>

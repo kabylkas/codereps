@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getProblem, deleteProblem } from "../../api/problems";
 import type { Problem } from "../../types/problem";
+import CodeBlock from "../../components/ui/CodeBlock";
+import Markdown from "react-markdown";
 
 const difficultyColors: Record<string, string> = {
   easy: "bg-success-dim text-success",
@@ -76,7 +78,7 @@ export default function ProblemViewPage() {
         <div className="flex gap-2">
           <Link
             to={`/problems/${problem.id}/solve`}
-            className="bg-lime text-[#0c0d12] px-4 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover transition-all duration-200 hover:shadow-[0_0_16px_var(--color-lime-glow)]"
+            className="bg-lime text-[#FDFAF5] px-4 py-2 rounded-lg text-sm font-bold hover:bg-lime-hover transition-all duration-200 hover:shadow-[0_0_16px_var(--color-lime-glow)]"
           >
             Solve
           </Link>
@@ -102,16 +104,16 @@ export default function ProblemViewPage() {
       {/* Description */}
       <div className="rounded-xl border border-border bg-surface p-6 mb-4">
         <h2 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3">Description</h2>
-        <div className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm">{problem.description}</div>
+        <div className="text-text-secondary leading-relaxed text-sm prose-custom">
+          <Markdown>{problem.description}</Markdown>
+        </div>
       </div>
 
       {/* Starter code */}
       {problem.starter_code && (
         <div className="rounded-xl border border-border bg-surface p-6 mb-4">
           <h2 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3">Starter Code</h2>
-          <pre className="bg-[#0c0d12] rounded-lg p-4 text-sm overflow-x-auto border border-border-subtle">
-            <code className="text-lime/80 font-mono">{problem.starter_code}</code>
-          </pre>
+          <CodeBlock code={problem.starter_code} language={problem.language} />
         </div>
       )}
 
@@ -122,9 +124,7 @@ export default function ProblemViewPage() {
             Solution
             <span className="text-[10px] bg-warning-dim text-warning px-2 py-0.5 rounded-full normal-case tracking-normal">Hidden from students</span>
           </h2>
-          <pre className="bg-[#0c0d12] rounded-lg p-4 text-sm overflow-x-auto border border-border-subtle">
-            <code className="text-lime/80 font-mono">{problem.solution_code}</code>
-          </pre>
+          <CodeBlock code={problem.solution_code} language={problem.language} />
         </div>
       )}
 
@@ -147,11 +147,11 @@ export default function ProblemViewPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider mb-1.5">Input</p>
-                    <pre className="bg-[#0c0d12] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.input_data}</pre>
+                    <pre className="bg-[#2A2623] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.input_data}</pre>
                   </div>
                   <div>
                     <p className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider mb-1.5">Expected Output</p>
-                    <pre className="bg-[#0c0d12] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.expected_output}</pre>
+                    <pre className="bg-[#2A2623] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.expected_output}</pre>
                   </div>
                 </div>
               </div>

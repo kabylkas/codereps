@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(username, password);
+      await login(email, password);
       navigate("/dashboard");
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string }; status?: number }; message?: string };
@@ -46,7 +46,7 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <div className="flex items-center gap-2.5 justify-center mb-5">
             <div className="w-10 h-10 rounded-xl bg-lime flex items-center justify-center shadow-[0_0_32px_var(--color-lime-glow)]">
-              <span className="font-mono font-bold text-lg text-[#0c0d12]">{"{}"}</span>
+              <span className="font-mono font-bold text-lg text-[#FDFAF5]">{"{}"}</span>
             </div>
             <div>
               <span className="font-display font-bold text-2xl text-text-primary tracking-tight">codereps</span>
@@ -65,13 +65,13 @@ export default function LoginPage() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">Username</label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Email</label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors"
-              placeholder="Enter your username"
+              placeholder="you@university.edu"
               required
             />
           </div>
@@ -89,7 +89,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-lime text-[#0c0d12] py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_24px_var(--color-lime-glow)]"
+            className="w-full bg-lime text-[#FDFAF5] py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_24px_var(--color-lime-glow)]"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
