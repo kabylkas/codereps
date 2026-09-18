@@ -15,3 +15,9 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+if settings.secret_key == "change-me-in-production" or not settings.secret_key:
+    raise RuntimeError(
+        "SECRET_KEY must be set in .env to a strong random value. "
+        "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(48))'"
+    )
