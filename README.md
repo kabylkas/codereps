@@ -141,4 +141,4 @@ Role-based access, course creation, problem curation through the design studio, 
 
 ## License
 
-TBD
+Released under the [MIT License](LICENSE).
