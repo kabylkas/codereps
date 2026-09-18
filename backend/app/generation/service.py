@@ -28,6 +28,7 @@ from app.generation.schemas import (
 )
 from app.problems.models import Problem, TestCase, CourseProblem
 from app.problems.schemas import ProblemResponse
+from app.problems import personalization_service
 from app.topics.models import Topic
 
 logger = logging.getLogger(__name__)
@@ -356,6 +357,9 @@ async def _save_problem(
     )
     db.add(cp)
     await db.flush()
+
+    # Create personalized slots for all enrolled students
+    await personalization_service.create_slots_for_new_problem(db, course_id, problem.id)
 
     result = await db.execute(
         select(Problem)

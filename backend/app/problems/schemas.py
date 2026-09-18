@@ -81,3 +81,7 @@ class ProblemResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class PersonalizedProblemResponse(ProblemResponse):
+    is_personalized: bool = False

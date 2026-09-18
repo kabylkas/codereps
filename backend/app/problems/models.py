@@ -75,3 +75,20 @@ class TestCase(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     problem = relationship("Problem", back_populates="test_cases")
+
+
+class PersonalizedProblem(Base):
+    __tablename__ = "personalized_problems"
+    __table_args__ = (UniqueConstraint("problem_id", "user_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    problem_id: Mapped[str] = mapped_column(String(36), ForeignKey("problems.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    seed: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")  # pending, generating, ready, failed
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    problem = relationship("Problem")
+    user = relationship("User")

@@ -190,6 +190,53 @@ generate diverse test inputs that cover basic cases, edge cases, and larger inpu
 Do NOT generate expected outputs — only inputs. \
 Return ONLY valid JSON — no explanations, no markdown."""
 
+# ── Personalization: Rephrase a problem for a specific student ──
+
+PERSONALIZE_SYSTEM_PROMPT = """\
+You are a creative programming problem writer. Given an original problem statement, \
+you rephrase it into a personalized version tailored to a specific student. \
+Keep the EXACT same algorithmic logic, input/output format, constraints, and difficulty. \
+Only change the story, scenario, variable names in the story (not in code), and framing. \
+The rephrased problem must be solvable with the exact same code as the original. \
+Format the description in Markdown: use **bold** for section headers like **Examples** and **Constraints**, \
+use `backticks` for inline values, and use code blocks for input/output examples. \
+Return ONLY valid JSON — no explanations, no markdown fences."""
+
+
+def build_personalize_prompt(
+    original_title: str,
+    original_description: str,
+    student_name: str,
+    interests: list[str],
+    seed: int,
+) -> str:
+    interests_str = ", ".join(interests) if interests else "general topics"
+    parts = [
+        "Rephrase the following programming problem into a personalized version.",
+        f"\nStudent's first name: {student_name.split()[0]}",
+        f"Student's interests/hobbies: {interests_str}",
+        f"Random variation seed: {seed} (use this to pick which interest to focus on and how to frame the story — "
+        "different seeds should produce noticeably different stories even for the same student)",
+        "\nRULES:",
+        "- The underlying algorithm, input format, output format, and constraints MUST remain IDENTICAL.",
+        "- The test cases from the original problem must still work unchanged.",
+        "- Theme the problem around one or two of the student's hobbies/interests.",
+        "- Do NOT put the student's name in the title. Titles should describe the scenario, not be possessive "
+        "(e.g. 'Trail Mix Calorie Counter' not 'Arai's Trail Mix Calorie Counter').",
+        "- You may use the student's name inside the description text as a character, but keep it natural and sparse.",
+        "- Give it a fun, engaging title that reflects the hobby-themed scenario.",
+        "- Do NOT mention that this is a rephrased or personalized problem.",
+        f"\nOriginal title: {original_title}",
+        f"\nOriginal description:\n{original_description}",
+        '\nRespond with a JSON object:\n'
+        '{\n'
+        '  "title": "string (new personalized title)",\n'
+        '  "description": "string (full Markdown description with **Examples** and **Constraints**)"\n'
+        '}',
+    ]
+    return "\n".join(parts)
+
+
 TEST_TYPE_INPUT_INSTRUCTIONS = {
     "stdin_stdout": (
         "Test type: stdin/stdout.\n"

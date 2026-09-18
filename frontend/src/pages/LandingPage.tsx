@@ -433,11 +433,11 @@ export default function LandingPage() {
               <p className="font-mono text-xs uppercase tracking-widest text-error mb-4">Before codereps.ai</p>
               <ul className="space-y-3">
                 {[
+                  "AI is a threat to academic integrity",
                   "1 version of each problem",
                   "Students Google the answer",
                   "Exams feel disconnected from homework",
                   "Hours spent creating new assignments",
-                  "AI is a threat to academic integrity",
                 ].map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-text-secondary text-sm">
                     <span className="mt-0.5 text-error"><Icon.X /></span>
@@ -451,11 +451,11 @@ export default function LandingPage() {
               <p className="font-mono text-xs uppercase tracking-widest text-lime mb-4">With codereps.ai</p>
               <ul className="space-y-3">
                 {[
+                  "AI becomes your teaching assistant",
                   "Unlimited AI-generated variations",
                   "Every attempt is a unique scenario",
                   "Exam problems come from the practice pool",
                   "Professors curate; AI creates",
-                  "AI becomes your teaching assistant",
                 ].map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-text-primary text-sm">
                     <span className="mt-0.5 text-lime"><Icon.Check /></span>

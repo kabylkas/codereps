@@ -45,6 +45,24 @@ export async function getCourseProblems(courseId: string): Promise<Problem[]> {
   return res.data;
 }
 
+export interface StudentProblem {
+  id: string;
+  problem_id: string;
+  title: string | null;
+  description: string | null;
+  status: "pending" | "generating" | "ready" | "failed";
+  difficulty: string;
+  language: string;
+  topic_id: string | null;
+}
+
+export async function getMyProblems(courseId: string, topicId?: string): Promise<StudentProblem[]> {
+  const params: Record<string, string> = {};
+  if (topicId) params.topic_id = topicId;
+  const res = await client.get(`/courses/${courseId}/my-problems`, { params });
+  return res.data;
+}
+
 export async function addProblemToCourse(courseId: string, problemId: string): Promise<void> {
   await client.post(`/courses/${courseId}/problems`, { problem_id: problemId });
 }

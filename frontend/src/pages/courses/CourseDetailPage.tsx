@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getCourse, getCourseStudents, getCourseProblems, removeStudent, removeProblemFromCourse } from "../../api/courses";
+import { getCourse, getCourseStudents, getCourseProblems, getMyProblems, removeStudent, removeProblemFromCourse, type StudentProblem } from "../../api/courses";
 import type { Course } from "../../types/course";
 import type { Problem } from "../../types/problem";
 import type { User } from "../../types/auth";
@@ -22,8 +22,10 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [students, setStudents] = useState<User[]>([]);
   const [problems, setProblems] = useState<Problem[]>([]);
+  const [studentProblems, setStudentProblems] = useState<StudentProblem[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
   const [loading, setLoading] = useState(true);
+  const isStudent = user?.role === "student";
 
   const isOwner = user && course && (user.id === course.owner_id || user.role === "admin");
 
@@ -40,7 +42,11 @@ export default function CourseDetailPage() {
       getCourseStudents(id).then(setStudents);
     }
     if (tab === "problems") {
-      getCourseProblems(id).then(setProblems);
+      if (isStudent) {
+        getMyProblems(id).then(setStudentProblems);
+      } else {
+        getCourseProblems(id).then(setProblems);
+      }
     }
   }, [id, tab, isOwner]);
 
@@ -185,59 +191,121 @@ export default function CourseDetailPage() {
               </Link>
             </div>
           )}
-          {problems.length === 0 ? (
-            <div className="rounded-xl border border-border-subtle bg-surface/50 p-10 text-center">
-              <p className="text-text-secondary font-medium">No problems in this course yet</p>
-              <p className="text-text-tertiary text-sm mt-1">Add problems from the Problem Studio or generate new ones.</p>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border bg-surface overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Problem</th>
-                    <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Difficulty</th>
-                    <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Language</th>
-                    <th className="px-5 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {problems.map((p) => (
-                    <tr key={p.id} className="border-t border-border-subtle hover:bg-surface-2/50 transition-colors">
-                      <td className="px-5 py-3">
-                        <Link to={`/problems/${p.id}`} className="text-text-primary hover:text-lime transition-colors font-medium">
-                          {p.title}
-                        </Link>
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${difficultyColors[p.difficulty] || ""}`}>
-                          {p.difficulty}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 font-mono text-text-tertiary text-xs">{p.language}</td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex gap-3 justify-end">
-                          <Link to={`/problems/${p.id}/solve`} className="text-lime/70 hover:text-lime text-xs font-medium transition-colors">
-                            Solve
-                          </Link>
-                          {isOwner && (
-                            <button
-                              onClick={async () => {
-                                await removeProblemFromCourse(course.id, p.id);
-                                setProblems((prev) => prev.filter((pr) => pr.id !== p.id));
-                              }}
-                              className="text-error/60 hover:text-error text-xs font-medium transition-colors"
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      </td>
+
+          {/* Student view: personalized problems */}
+          {isStudent ? (
+            studentProblems.length === 0 ? (
+              <div className="rounded-xl border border-border-subtle bg-surface/50 p-10 text-center">
+                <p className="text-text-secondary font-medium">No problems yet</p>
+                <p className="text-text-tertiary text-sm mt-1">Problems will appear here once your professor adds them.</p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-surface overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Problem</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Difficulty</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Status</th>
+                      <th className="px-5 py-3" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {studentProblems.map((p, idx) => {
+                      const isReady = p.status === "ready";
+                      return (
+                        <tr key={p.id} className="border-t border-border-subtle hover:bg-surface-2/50 transition-colors">
+                          <td className="px-5 py-3">
+                            {isReady ? (
+                              <Link to={`/problems/${p.problem_id}`} className="text-text-primary hover:text-lime transition-colors font-medium">
+                                {p.title || `Problem ${idx + 1}`}
+                              </Link>
+                            ) : (
+                              <span className="text-text-tertiary font-medium">Problem {idx + 1}</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${difficultyColors[p.difficulty] || ""}`}>
+                              {p.difficulty}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              isReady ? "bg-success-dim text-success" : "bg-warning-dim text-warning"
+                            }`}>
+                              {isReady ? "Ready" : "Generating..."}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-right">
+                            {isReady && (
+                              <Link to={`/problems/${p.problem_id}/solve`} className="text-lime/70 hover:text-lime text-xs font-medium transition-colors">
+                                Solve
+                              </Link>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )
+          ) : (
+            /* Professor/admin view: original problems */
+            problems.length === 0 ? (
+              <div className="rounded-xl border border-border-subtle bg-surface/50 p-10 text-center">
+                <p className="text-text-secondary font-medium">No problems in this course yet</p>
+                <p className="text-text-tertiary text-sm mt-1">Add problems from the Problem Studio or generate new ones.</p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-surface overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Problem</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Difficulty</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">Language</th>
+                      <th className="px-5 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {problems.map((p) => (
+                      <tr key={p.id} className="border-t border-border-subtle hover:bg-surface-2/50 transition-colors">
+                        <td className="px-5 py-3">
+                          <Link to={`/problems/${p.id}`} className="text-text-primary hover:text-lime transition-colors font-medium">
+                            {p.title}
+                          </Link>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${difficultyColors[p.difficulty] || ""}`}>
+                            {p.difficulty}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 font-mono text-text-tertiary text-xs">{p.language}</td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex gap-3 justify-end">
+                            <Link to={`/problems/${p.id}/solve`} className="text-lime/70 hover:text-lime text-xs font-medium transition-colors">
+                              Solve
+                            </Link>
+                            {isOwner && (
+                              <button
+                                onClick={async () => {
+                                  await removeProblemFromCourse(course.id, p.id);
+                                  setProblems((prev) => prev.filter((pr) => pr.id !== p.id));
+                                }}
+                                className="text-error/60 hover:text-error text-xs font-medium transition-colors"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
         </div>
       )}

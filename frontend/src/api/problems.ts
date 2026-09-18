@@ -16,6 +16,11 @@ export async function getProblem(id: string): Promise<Problem> {
   return res.data;
 }
 
+export async function getPersonalizedProblem(id: string): Promise<Problem & { is_personalized: boolean }> {
+  const res = await client.get(`/problems/${id}/personalized`);
+  return res.data;
+}
+
 export async function createProblem(data: ProblemCreate): Promise<Problem> {
   const res = await client.post("/problems", data);
   return res.data;

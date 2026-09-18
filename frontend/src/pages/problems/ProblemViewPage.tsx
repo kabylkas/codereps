@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getProblem, deleteProblem } from "../../api/problems";
+import { getProblem, getPersonalizedProblem, deleteProblem } from "../../api/problems";
 import type { Problem } from "../../types/problem";
 import CodeBlock from "../../components/ui/CodeBlock";
 import Markdown from "react-markdown";
@@ -18,18 +18,33 @@ export default function ProblemViewPage() {
   const navigate = useNavigate();
   const [problem, setProblem] = useState<Problem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [personalizing, setPersonalizing] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (!id) return;
+    if (user?.role === "student") {
+      setPersonalizing(true);
+      getPersonalizedProblem(id)
+        .then(setProblem)
+        .finally(() => { setLoading(false); setPersonalizing(false); });
+    } else {
       getProblem(id)
         .then(setProblem)
         .finally(() => setLoading(false));
     }
-  }, [id]);
+  }, [id, user?.role]);
 
   if (loading) {
     return (
       <div className="max-w-3xl animate-fade-in">
+        {personalizing && (
+          <div className="flex items-center gap-3 mb-4 text-sm text-text-secondary">
+            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+            Personalizing this problem for you...
+          </div>
+        )}
         <div className="skeleton h-8 w-64 mb-3" />
         <div className="skeleton h-4 w-48 mb-8" />
         <div className="skeleton h-48 w-full rounded-xl" />
@@ -109,14 +124,6 @@ export default function ProblemViewPage() {
         </div>
       </div>
 
-      {/* Starter code */}
-      {problem.starter_code && (
-        <div className="rounded-xl border border-border bg-surface p-6 mb-4">
-          <h2 className="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-3">Starter Code</h2>
-          <CodeBlock code={problem.starter_code} language={problem.language} />
-        </div>
-      )}
-
       {/* Solution (professors only) */}
       {canEdit && problem.solution_code && (
         <div className="rounded-xl border border-border bg-surface p-6 mb-4">
@@ -147,11 +154,11 @@ export default function ProblemViewPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider mb-1.5">Input</p>
-                    <pre className="bg-[#2A2623] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.input_data}</pre>
+                    <pre className="bg-[#2A2623] rounded-lg p-3 text-xs text-white font-mono overflow-x-auto border border-border-subtle">{tc.input_data}</pre>
                   </div>
                   <div>
                     <p className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider mb-1.5">Expected Output</p>
-                    <pre className="bg-[#2A2623] rounded-lg p-3 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{tc.expected_output}</pre>
+                    <pre className="bg-[#2A2623] rounded-lg p-3 text-xs text-white font-mono overflow-x-auto border border-border-subtle">{tc.expected_output}</pre>
                   </div>
                 </div>
               </div>

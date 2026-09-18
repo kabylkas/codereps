@@ -49,6 +49,9 @@ async def update_profile(
         current_user.full_name = data.full_name
     if data.position is not None:
         current_user.position = data.position
+    if data.interests is not None:
+        import json
+        current_user.interests = json.dumps(data.interests)
     await db.commit()
     await db.refresh(current_user)
     return current_user

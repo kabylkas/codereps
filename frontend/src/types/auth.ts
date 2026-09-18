@@ -4,6 +4,7 @@ export interface User {
   full_name: string;
   role: "admin" | "professor" | "student";
   position: string | null;
+  interests: string[] | null;
   is_active: boolean;
 }
 

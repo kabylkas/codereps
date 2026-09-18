@@ -7,6 +7,7 @@ from app.auth.schemas import UserResponse
 from app.courses.schemas import CourseCreate, CourseUpdate, CourseResponse, JoinCourseRequest, AddProblemRequest
 from app.courses import service
 from app.problems.schemas import ProblemResponse
+from app.problems import personalization_service
 
 router = APIRouter()
 
@@ -88,6 +89,8 @@ async def join_course(
     if existing:
         raise HTTPException(status_code=400, detail="Already enrolled")
     await service.enroll_user(db, current_user.id, course.id)
+    # Create personalized problem slots for the student (generates in background)
+    await personalization_service.create_slots_for_enrollment(db, current_user.id, course.id)
     return {"detail": "Enrolled successfully"}
 
 
@@ -120,6 +123,21 @@ async def remove_student(
     await service.remove_enrollment(db, user_id, course_id)
 
 
+@router.get("/{course_id}/my-problems")
+async def get_my_problems(
+    course_id: str,
+    topic_id: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get the student's personalized problem pool for a course."""
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have personalized problems")
+    return await personalization_service.get_student_problems_for_course(
+        db, current_user.id, course_id, topic_id=topic_id,
+    )
+
+
 @router.get("/{course_id}/problems", response_model=list[ProblemResponse])
 async def get_course_problems(
     course_id: str,
@@ -140,6 +158,8 @@ async def add_problem(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     await service.add_problem_to_course(db, course_id, data.problem_id, current_user.id)
+    # Create personalized problem slots for all enrolled students (generates in background)
+    await personalization_service.create_slots_for_new_problem(db, course_id, data.problem_id)
     return {"detail": "Problem added"}
 
 

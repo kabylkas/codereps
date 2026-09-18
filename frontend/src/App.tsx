@@ -12,6 +12,7 @@ import ProblemListPage from "./pages/problems/ProblemListPage";
 import ProblemEditorPage from "./pages/problems/ProblemEditorPage";
 import ProblemViewPage from "./pages/problems/ProblemViewPage";
 import ProblemSolvePage from "./pages/problems/ProblemSolvePage";
+import StudentProblemListPage from "./pages/problems/StudentProblemListPage";
 import LandingPage from "./pages/LandingPage";
 import ProfilePage from "./pages/ProfilePage";
 
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/courses/new" element={<ProtectedRoute allowedRoles={["professor", "admin"]}><CourseCreatePage /></ProtectedRoute>} />
             <Route path="/courses/:id" element={<CourseDetailPage />} />
             <Route path="/problems" element={<ProtectedRoute allowedRoles={["professor", "admin"]}><ProblemListPage /></ProtectedRoute>} />
+            <Route path="/my-problems" element={<ProtectedRoute allowedRoles={["student"]}><StudentProblemListPage /></ProtectedRoute>} />
             <Route path="/problems/new" element={<ProtectedRoute allowedRoles={["professor", "admin"]}><ProblemEditorPage /></ProtectedRoute>} />
             <Route path="/problems/:id" element={<ProblemViewPage />} />
             <Route path="/problems/:id/solve" element={<ProblemSolvePage />} />

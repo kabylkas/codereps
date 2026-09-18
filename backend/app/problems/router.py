@@ -7,8 +7,10 @@ from app.problems.schemas import (
     ProblemCreate, ProblemUpdate, ProblemResponse,
     TagResponse, TagCreate,
     TestCaseCreate, TestCaseUpdate, TestCaseResponse,
+    PersonalizedProblemResponse,
 )
 from app.problems import service
+from app.problems import personalization_service
 
 router = APIRouter()
 
@@ -78,6 +80,60 @@ async def get_problem(
         problem.solution_code = None
         problem.test_cases = [tc for tc in problem.test_cases if not tc.is_hidden]
     return problem
+
+
+@router.get("/{problem_id}/personalized", response_model=PersonalizedProblemResponse)
+async def get_personalized_problem(
+    problem_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get a personalized version of the problem for the current student."""
+    problem = await service.get_problem_by_id(db, problem_id)
+    if not problem:
+        raise HTTPException(status_code=404, detail="Problem not found")
+
+    # Non-students get the original problem back (no personalization)
+    if current_user.role != "student":
+        return PersonalizedProblemResponse(
+            id=problem.id,
+            title=problem.title,
+            description=problem.description,
+            difficulty=problem.difficulty,
+            starter_code=problem.starter_code,
+            solution_code=problem.solution_code,
+            language=problem.language,
+            created_by=problem.created_by,
+            is_public=problem.is_public,
+            topic_id=problem.topic_id,
+            tags=[{"id": t.id, "name": t.name} for t in problem.tags],
+            test_cases=[tc for tc in problem.test_cases],
+            created_at=problem.created_at,
+            is_personalized=False,
+        )
+
+    # Students: get or generate personalized version
+    personalized = await personalization_service.get_or_create_personalized(
+        db, problem, current_user,
+    )
+
+    # Hide solution and hidden test cases
+    return PersonalizedProblemResponse(
+        id=problem.id,
+        title=personalized.title,
+        description=personalized.description,
+        difficulty=problem.difficulty,
+        starter_code=problem.starter_code,
+        solution_code=None,
+        language=problem.language,
+        created_by=problem.created_by,
+        is_public=problem.is_public,
+        topic_id=problem.topic_id,
+        tags=[{"id": t.id, "name": t.name} for t in problem.tags],
+        test_cases=[tc for tc in problem.test_cases if not tc.is_hidden],
+        created_at=problem.created_at,
+        is_personalized=True,
+    )
 
 
 @router.patch("/{problem_id}", response_model=ProblemResponse)

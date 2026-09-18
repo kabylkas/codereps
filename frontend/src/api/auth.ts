@@ -21,7 +21,7 @@ export async function getMe(): Promise<User> {
   return res.data;
 }
 
-export async function updateProfile(data: { full_name?: string; email?: string; position?: string }): Promise<User> {
+export async function updateProfile(data: { full_name?: string; email?: string; position?: string; interests?: string[] }): Promise<User> {
   const res = await client.patch("/auth/me", data);
   return res.data;
 }

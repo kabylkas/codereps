@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import * as authApi from "../api/auth";
 
@@ -16,6 +16,54 @@ const POSITIONS = [
   "Graduate TA",
 ];
 
+const ALL_INTERESTS = [
+  "Basketball",
+  "Soccer",
+  "Swimming",
+  "Hiking",
+  "Cooking",
+  "Baking",
+  "Photography",
+  "Music",
+  "Guitar",
+  "Piano",
+  "Drawing",
+  "Painting",
+  "Reading",
+  "Writing",
+  "Gaming",
+  "Fitness",
+  "Yoga",
+  "Dancing",
+  "Traveling",
+  "Camping",
+  "Fishing",
+  "Gardening",
+  "Skateboarding",
+  "Cycling",
+  "Running",
+  "Movies",
+  "Anime",
+  "Chess",
+  "Board Games",
+  "Volunteering",
+  "Fashion",
+  "Pottery",
+  "Woodworking",
+  "Astronomy",
+  "Coffee",
+  "Pets",
+  "Martial Arts",
+  "Snowboarding",
+  "Surfing",
+  "Rock Climbing",
+];
+
+function pickRandom(arr: string[], count: number): string[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
 
@@ -32,6 +80,61 @@ export default function ProfilePage() {
   const [pwMsg, setPwMsg] = useState("");
   const [pwErr, setPwErr] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
+
+  // Interests state (students only)
+  const [interests, setInterests] = useState<string[]>([]);
+  const [interestsMsg, setInterestsMsg] = useState("");
+  const [interestsErr, setInterestsErr] = useState("");
+  const [interestsLoading, setInterestsLoading] = useState(false);
+  const interestsInitialized = useRef(false);
+
+  useEffect(() => {
+    if (user?.role === "student" && !interestsInitialized.current) {
+      interestsInitialized.current = true;
+      if (user.interests && user.interests.length > 0) {
+        setInterests(user.interests);
+      } else {
+        // Randomly populate with 5-10 interests
+        const count = Math.floor(Math.random() * 6) + 5;
+        const randomInterests = pickRandom(ALL_INTERESTS, count);
+        setInterests(randomInterests);
+        // Auto-save the random interests
+        authApi.updateProfile({ interests: randomInterests }).then(() => refreshUser());
+      }
+    }
+  }, [user]);
+
+  const toggleInterest = (interest: string) => {
+    setInterests((prev) =>
+      prev.includes(interest)
+        ? prev.filter((i) => i !== interest)
+        : [...prev, interest]
+    );
+  };
+
+  const interestsDirty = (() => {
+    const saved = user?.interests || [];
+    if (interests.length !== saved.length) return true;
+    const sortedA = [...interests].sort();
+    const sortedB = [...saved].sort();
+    return sortedA.some((v, i) => v !== sortedB[i]);
+  })();
+
+  const handleInterestsSave = async () => {
+    setInterestsMsg("");
+    setInterestsErr("");
+    setInterestsLoading(true);
+    try {
+      await authApi.updateProfile({ interests });
+      await refreshUser();
+      setInterestsMsg("Interests updated.");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setInterestsErr(axiosErr.response?.data?.detail || "Failed to update interests");
+    } finally {
+      setInterestsLoading(false);
+    }
+  };
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,19 +259,21 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">Position</label>
-            <select
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              className="w-full bg-base border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors cursor-pointer"
-            >
-              <option value="">Select your position...</option>
-              {POSITIONS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
+          {user?.role !== "student" && (
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">Position</label>
+              <select
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                className="w-full bg-base border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-lime focus:ring-1 focus:ring-lime/30 transition-colors cursor-pointer"
+              >
+                <option value="">Select your position...</option>
+                {POSITIONS.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="pt-2">
             <button
@@ -181,6 +286,54 @@ export default function ProfilePage() {
           </div>
         </form>
       </div>
+
+      {/* Interests section (students only) */}
+      {user?.role === "student" && (
+        <div className="rounded-xl border border-border bg-surface p-6 mb-6">
+          <h2 className="font-display font-bold text-base text-text-primary mb-2">Interests</h2>
+          <p className="text-text-tertiary text-sm mb-5">Select topics you're interested in. This helps us personalize your experience.</p>
+
+          {interestsErr && (
+            <div className="bg-error-dim border border-error/20 rounded-lg px-4 py-3 mb-4 animate-fade-in">
+              <p className="text-error text-sm">{interestsErr}</p>
+            </div>
+          )}
+          {interestsMsg && (
+            <div className="bg-success-dim border border-success/20 rounded-lg px-4 py-3 mb-4 animate-fade-in">
+              <p className="text-success text-sm">{interestsMsg}</p>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 mb-5">
+            {ALL_INTERESTS.map((interest) => {
+              const selected = interests.includes(interest);
+              return (
+                <button
+                  key={interest}
+                  type="button"
+                  onClick={() => toggleInterest(interest)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 cursor-pointer ${
+                    selected
+                      ? "bg-lime/15 border-lime text-lime"
+                      : "bg-base border-border text-text-tertiary hover:border-text-secondary hover:text-text-secondary"
+                  }`}
+                >
+                  {interest}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleInterestsSave}
+            disabled={interestsLoading || !interestsDirty}
+            className="bg-lime text-[#FDFAF5] px-6 py-3 rounded-lg text-sm font-bold hover:bg-lime-hover disabled:opacity-50 transition-all duration-200"
+          >
+            {interestsLoading ? "Saving..." : "Save Interests"}
+          </button>
+        </div>
+      )}
 
       {/* Change password form */}
       <div className="rounded-xl border border-border bg-surface p-6">

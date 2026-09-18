@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { getTopics, createTopic, deleteTopic } from "../../api/topics";
 import type { Topic } from "../../types/topic";
 import GenerationDialog from "./GenerationDialog";
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export default function TopicManagementPanel({ courseId, courseLanguage, isOwner }: Props) {
+  const { user } = useAuth();
+  const isStudent = user?.role === "student";
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
@@ -119,7 +122,7 @@ export default function TopicManagementPanel({ courseId, courseLanguage, isOwner
             <div key={topic.id} className="rounded-xl border border-border bg-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4">
                 <Link
-                  to={`/problems?course_id=${courseId}&topic_id=${topic.id}`}
+                  to={isStudent ? `/my-problems?course_id=${courseId}&topic_id=${topic.id}` : `/problems?course_id=${courseId}&topic_id=${topic.id}`}
                   className="group/topic"
                 >
                   <h3 className="font-display font-bold text-text-primary group-hover/topic:text-lime transition-colors flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getProblem } from "../../api/problems";
+import { getProblem, getPersonalizedProblem } from "../../api/problems";
 import { submitCode, getSubmissions } from "../../api/submissions";
 import type { Problem } from "../../types/problem";
 import type { Submission, SubmissionSummary } from "../../types/submission";
@@ -27,14 +27,15 @@ export default function ProblemSolvePage() {
 
   useEffect(() => {
     if (!id) return;
-    getProblem(id).then((p) => {
+    const fetchProblem = user?.role === "student" ? getPersonalizedProblem : getProblem;
+    fetchProblem(id).then((p) => {
       setProblem(p);
-      setCode(p.starter_code || "");
+      setCode("");
       setLanguage(p.language || "python");
       setLoading(false);
     });
     getSubmissions(id).then(setHistory);
-  }, [id]);
+  }, [id, user?.role]);
 
   const handleSubmit = async () => {
     if (!id) return;
@@ -103,11 +104,11 @@ export default function ProblemSolvePage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-[10px] text-text-tertiary mb-1">Input</p>
-                    <pre className="bg-[#2A2623] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.input_data}</pre>
+                    <pre className="bg-[#2A2623] rounded p-2 text-xs text-white font-mono border border-border-subtle">{tc.input_data}</pre>
                   </div>
                   <div>
                     <p className="text-[10px] text-text-tertiary mb-1">Expected</p>
-                    <pre className="bg-[#2A2623] rounded p-2 text-xs text-text-secondary font-mono border border-border-subtle">{tc.expected_output}</pre>
+                    <pre className="bg-[#2A2623] rounded p-2 text-xs text-white font-mono border border-border-subtle">{tc.expected_output}</pre>
                   </div>
                 </div>
               </div>
@@ -145,14 +146,9 @@ export default function ProblemSolvePage() {
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="bg-surface border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-text-secondary focus:outline-none focus:border-lime transition-colors cursor-pointer"
-            >
-              <option value="python">Python</option>
-              <option value="c">C</option>
-            </select>
+            <span className="bg-surface border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-text-secondary">
+              {language === "python" ? "Python" : language === "c" ? "C" : language.toUpperCase()}
+            </span>
             <span className="text-[10px] text-text-tertiary font-mono">
               {code.split("\n").length} lines
             </span>
@@ -231,7 +227,7 @@ export default function ProblemSolvePage() {
                   {!r.passed && r.actual_output && (
                     <div className="mt-2">
                       <p className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">Your output</p>
-                      <pre className="bg-[#2A2623] rounded p-2 text-xs text-text-secondary font-mono overflow-x-auto border border-border-subtle">{r.actual_output}</pre>
+                      <pre className="bg-[#2A2623] rounded p-2 text-xs text-white font-mono overflow-x-auto border border-border-subtle">{r.actual_output}</pre>
                     </div>
                   )}
                   {r.error_message && (
