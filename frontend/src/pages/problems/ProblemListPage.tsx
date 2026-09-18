@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { getProblems, getTags } from "../../api/problems";
 import { getTopics } from "../../api/topics";
 import { addProblemToCourse } from "../../api/courses";

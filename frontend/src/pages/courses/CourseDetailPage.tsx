@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { getCourse, getCourseStudents, getCourseProblems, getMyProblems, removeStudent, removeProblemFromCourse, type StudentProblem } from "../../api/courses";
 import type { Course } from "../../types/course";
 import type { Problem } from "../../types/problem";

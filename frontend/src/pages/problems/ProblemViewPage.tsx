@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { getProblem, getPersonalizedProblem, deleteProblem } from "../../api/problems";
 import type { Problem } from "../../types/problem";
 import CodeBlock from "../../components/ui/CodeBlock";
